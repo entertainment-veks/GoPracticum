@@ -13,7 +13,7 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var database map[string]string
 
 func ChooseEndpoint(w http.ResponseWriter, r *http.Request) {
-	if !isCorrectUrl(r.FormValue("s")) {
+	if !isCorrectURL(r.FormValue("s")) {
 		w.Write([]byte("400"))
 	}
 
@@ -48,7 +48,7 @@ func generateCode() string {
 	return string(b)
 }
 
-func isCorrectUrl(token string) bool {
+func isCorrectURL(token string) bool {
 	_, err := url.ParseRequestURI(token)
 	if err != nil {
 		return false
