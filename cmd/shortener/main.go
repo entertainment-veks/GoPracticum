@@ -49,6 +49,10 @@ func generateCode() string {
 }
 
 func isCorrectURL(token string) bool {
+	if token == "" {
+		return false
+	}
+
 	_, err := url.ParseRequestURI(token)
 	if err != nil {
 		return false
