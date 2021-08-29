@@ -15,7 +15,7 @@ var database map[string]string
 
 func PostMethod(w http.ResponseWriter, r *http.Request) {
 	if !isCorrectURL(r.FormValue("s")) {
-		w.Write([]byte("400"))
+		w.WriteHeader(400)
 		return
 	}
 
@@ -24,18 +24,20 @@ func PostMethod(w http.ResponseWriter, r *http.Request) {
 
 	database[code] = link
 
+	w.Write([]byte("http://localhost:8080/" + code))
 }
 
 func GetMethod(w http.ResponseWriter, r *http.Request) {
 	if !isCorrectURL(r.FormValue("s")) {
-		w.Write([]byte("400"))
+		w.WriteHeader(400)
 		return
 	}
 
 	vars := mux.Vars(r)
 	link := database[vars["key"]]
 
-	http.Redirect(w, r, link, r.Response.StatusCode)
+	w.WriteHeader(307)
+	w.Header().Set("Location", link)
 }
 
 func generateCode() string {
@@ -62,5 +64,5 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", PostMethod)
 	router.HandleFunc("/{key}", GetMethod)
-	fmt.Println(http.ListenAndServe(":8000", router))
+	fmt.Println(http.ListenAndServe(":8080", router))
 }
