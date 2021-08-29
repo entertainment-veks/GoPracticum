@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -12,20 +13,12 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 var database map[string]string
 
-func ChooseEndpoint(w http.ResponseWriter, r *http.Request) {
+func PostMethod(w http.ResponseWriter, r *http.Request) {
 	if !isCorrectURL(r.FormValue("s")) {
 		w.Write([]byte("400"))
+		return
 	}
 
-	if r.Method == http.MethodPost {
-		PostMethod(w, r)
-	}
-	if r.Method == http.MethodGet {
-		GetMethod(w, r)
-	}
-}
-
-func PostMethod(w http.ResponseWriter, r *http.Request) {
 	var link = r.FormValue("s")
 	var code = generateCode()
 
@@ -34,6 +27,11 @@ func PostMethod(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMethod(w http.ResponseWriter, r *http.Request) {
+	if !isCorrectURL(r.FormValue("s")) {
+		w.Write([]byte("400"))
+		return
+	}
+
 	vars := mux.Vars(r)
 	link := database[vars["key"]]
 
@@ -61,8 +59,8 @@ func isCorrectURL(token string) bool {
 }
 
 func main() {
-	http.HandleFunc("/", ChooseEndpoint)
-	http.HandleFunc("/{key}", ChooseEndpoint)
-
-	http.ListenAndServe(":8080", nil)
+	router := mux.NewRouter()
+	router.HandleFunc("/", PostMethod)
+	router.HandleFunc("/{key}", GetMethod)
+	fmt.Println(http.ListenAndServe(":8000", router))
 }
