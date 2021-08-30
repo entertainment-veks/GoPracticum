@@ -61,7 +61,6 @@ func main() {
 		database[code] = link
 
 		w.Write([]byte("http://localhost:8080/" + code))
-		w.WriteHeader(201)
 	})
 
 	http.ListenAndServe(":8080", router)
