@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
-	"io/ioutil"
 
 	"github.com/gorilla/mux"
 )
@@ -36,17 +36,10 @@ func PostMethod(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMethod(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-	code := 
-	if !isURL(r.FormValue("s")) {
-		w.WriteHeader(400)
-		return
-	}
+	vars := mux.Vars(r)
+	code := database[vars["key"]]
 
-
-	link := database[vars["key"]]
-
-	w.Header().Set("Location", link)
+	w.Header().Set("Location", code)
 	w.WriteHeader(307)
 }
 
