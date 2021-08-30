@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"io/ioutil"
 
 	"github.com/gorilla/mux"
 )
@@ -14,26 +15,35 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var database map[string]string
 
 func PostMethod(w http.ResponseWriter, r *http.Request) {
-	if !isURL(r.FormValue("s")) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	link := string(body)
+
+	if !isURL(link) {
 		w.WriteHeader(400)
 		return
 	}
 
-	var link = r.FormValue("s")
 	var code = generateCode()
 
 	database[code] = link
 
 	w.Write([]byte("http://localhost:8080/" + code))
+	w.WriteHeader(201)
 }
 
 func GetMethod(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+	code := 
 	if !isURL(r.FormValue("s")) {
 		w.WriteHeader(400)
 		return
 	}
 
-	vars := mux.Vars(r)
+
 	link := database[vars["key"]]
 
 	w.Header().Set("Location", link)
