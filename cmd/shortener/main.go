@@ -49,12 +49,11 @@ func generateCode() string {
 }
 
 func isURL(token string) bool {
-	_, err := url.ParseRequestURI(token)
-	if err == nil {
-		return true
-	} else {
+	if len(token) == 0 {
 		return false
 	}
+	_, err := url.ParseRequestURI(token)
+	return err == nil
 }
 
 func main() {
