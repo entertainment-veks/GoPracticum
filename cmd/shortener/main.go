@@ -14,7 +14,7 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var database map[string]string
 
 func PostMethod(w http.ResponseWriter, r *http.Request) {
-	if !isCorrectURL(r.FormValue("s")) {
+	if !isURL(r.FormValue("s")) {
 		w.WriteHeader(400)
 		return
 	}
