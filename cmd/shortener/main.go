@@ -36,8 +36,8 @@ func GetMethod(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	link := database[vars["key"]]
 
-	w.WriteHeader(307)
 	w.Header().Set("Location", link)
+	w.WriteHeader(307)
 }
 
 func generateCode() string {
