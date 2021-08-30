@@ -28,7 +28,7 @@ func PostMethod(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMethod(w http.ResponseWriter, r *http.Request) {
-	if !isCorrectURL(r.FormValue("s")) {
+	if !isURL(r.FormValue("s")) {
 		w.WriteHeader(400)
 		return
 	}
@@ -48,12 +48,13 @@ func generateCode() string {
 	return string(b)
 }
 
-func isCorrectURL(token string) bool {
+func isURL(token string) bool {
 	_, err := url.ParseRequestURI(token)
-	if err != nil {
+	if err == nil {
+		return true
+	} else {
 		return false
 	}
-	return true
 }
 
 func main() {
