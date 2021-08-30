@@ -17,8 +17,7 @@ var database map[string]string
 func PostMethod(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(400)
-		return
+		panic(err)
 	}
 
 	link := string(body)
