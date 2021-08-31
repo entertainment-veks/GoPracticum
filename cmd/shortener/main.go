@@ -60,6 +60,7 @@ func main() {
 
 		database[code] = link
 
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.Write([]byte("http://localhost:8080/" + code))
 	})
 
