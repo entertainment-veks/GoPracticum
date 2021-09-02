@@ -27,7 +27,7 @@ func isURL(token string) bool {
 	return err == nil
 }
 
-func StartServer() {
+func SetupServer() mux.Router {
 	database := make(map[string]string)
 
 	router := mux.NewRouter()
@@ -64,5 +64,5 @@ func StartServer() {
 		w.Write([]byte("http://localhost:8080/" + code))
 	})
 
-	http.ListenAndServe(":8080", router)
+	return *router
 }
