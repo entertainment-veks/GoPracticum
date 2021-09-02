@@ -27,7 +27,7 @@ func isURL(token string) bool {
 	return err == nil
 }
 
-func main() {
+func StartServer() {
 	database := make(map[string]string)
 
 	router := mux.NewRouter()
@@ -37,7 +37,7 @@ func main() {
 		code := database[vars["key"]]
 
 		w.Header().Set("Location", code)
-		w.WriteHeader(307)
+		w.WriteHeader(http.StatusTemporaryRedirect)
 	})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +52,7 @@ func main() {
 		link := string(body)
 
 		if !isURL(link) {
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -60,7 +60,7 @@ func main() {
 
 		database[code] = link
 
-		w.WriteHeader(201)
+		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("http://localhost:8080/" + code))
 	})
 
