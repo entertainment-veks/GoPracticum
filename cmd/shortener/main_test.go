@@ -82,7 +82,7 @@ func Test_Endpoints(t *testing.T) {
 		defer response.Body.Close()
 
 		if tests[1].want.data == response.Header.Get(tests[1].want.contentType) {
-			t.Errorf("!Expected body: %v, Actual: %v", tests[1].want.data, response.Header.Get(tests[1].want.contentType))
+			t.Errorf("Expected body: %v, Actual: %v", tests[1].want.data, response.Header.Get(tests[1].want.contentType))
 		}
 	})
 }

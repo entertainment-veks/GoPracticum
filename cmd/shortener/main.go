@@ -66,3 +66,8 @@ func SetupServer() mux.Router {
 
 	return *router
 }
+
+func main() {
+	router := SetupServer()
+	http.ListenAndServe(":8080", &router)
+}
