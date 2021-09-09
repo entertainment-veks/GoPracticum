@@ -27,44 +27,51 @@ func isURL(token string) bool {
 	return err == nil
 }
 
+type Service struct {
+	database map[string]string
+}
+
 func SetupServer() mux.Router {
-	database := make(map[string]string)
+	service := Service{
+		make(map[string]string),
+	}
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{key}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		code := database[vars["key"]]
-
-		w.Header().Set("Location", code)
-		w.WriteHeader(http.StatusTemporaryRedirect)
-	})
-
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		temp := r.Body
-
-		body, err := ioutil.ReadAll(temp)
-
-		if err != nil {
-			panic(err)
-		}
-
-		link := string(body)
-
-		if !isURL(link) {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		var code = generateCode()
-
-		database[code] = link
-
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("http://localhost:8080/" + code))
-	})
+	router.HandleFunc("/{key}", service.getHandler)
+	router.HandleFunc("/", service.postHandler)
 
 	return *router
+}
+
+func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	code := s.database[vars["key"]]
+
+	w.Header().Set("Location", code)
+	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		http.Error(w, "Unable to read request body", http.StatusBadRequest)
+	}
+
+	link := string(body)
+
+	if !isURL(link) {
+		http.Error(w, "Invalid link", http.StatusBadRequest)
+		return
+	}
+
+	code := generateCode()
+
+	s.database[code] = link
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("http://localhost:8080/" + code))
 }
 
 func main() {
