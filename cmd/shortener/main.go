@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Repository"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -28,12 +29,12 @@ func isURL(token string) bool {
 }
 
 type Service struct {
-	database map[string]string
+	repository *Repository
 }
 
 func SetupServer() mux.Router {
 	service := Service{
-		make(map[string]string),
+		repository: Repository.NewRepository(),
 	}
 
 	router := mux.NewRouter()
