@@ -1,11 +1,12 @@
 package main
 
 import (
-	"Repository"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
+
+	"GoPracticum/cmd/shortener/repository"
 
 	"github.com/gorilla/mux"
 )
@@ -29,12 +30,12 @@ func isURL(token string) bool {
 }
 
 type Service struct {
-	repository *Repository
+	repository *repository.Repository
 }
 
 func SetupServer() mux.Router {
 	service := Service{
-		repository: Repository.NewRepository(),
+		repository: repository.NewRepository(),
 	}
 
 	router := mux.NewRouter()
@@ -47,7 +48,7 @@ func SetupServer() mux.Router {
 
 func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	code := s.database[vars["key"]]
+	code := s.repository.Get(vars["key"])
 
 	w.Header().Set("Location", code)
 	w.WriteHeader(http.StatusTemporaryRedirect)
@@ -69,7 +70,7 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 
 	code := generateCode()
 
-	s.database[code] = link
+	s.repository.Set(code, link)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("http://localhost:8080/" + code))

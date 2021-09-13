@@ -1,4 +1,4 @@
-module github.com/entertainment-veks/GoPracticum
+module GoPracticum
 
 go 1.17
 
