@@ -35,7 +35,7 @@ type Service struct {
 
 func SetupServer() mux.Router {
 	service := Service{
-		repository: repository.NewRepository(),
+		repository.NewRepository(),
 	}
 
 	router := mux.NewRouter()
