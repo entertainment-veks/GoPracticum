@@ -112,7 +112,7 @@ func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
 
 	jsonResult, _ := json.Marshal(rawResult)
 
-	w.WriteHeader(http.StatusCreated)
+	w.Header().Add("Content-Type", "json")
 	w.Write(jsonResult)
 }
 
