@@ -4,7 +4,7 @@ import "sync"
 
 type Repository struct {
 	data map[string]string
-	mu   sync.Mutex // <- нужно для потокобезопасной записи в мапку, об этом в курсе рассказывается далее, пока просто добавь ее)
+	mu   *sync.Mutex // <- нужно для потокобезопасной записи в мапку, об этом в курсе рассказывается далее, пока просто добавь ее)
 }
 
 func (r *Repository) Get(key string) string {
@@ -24,5 +24,6 @@ func (r *Repository) Set(key, value string) {
 func NewRepository() *Repository {
 	return &Repository{
 		data: make(map[string]string),
+		mu:   &sync.Mutex{},
 	}
 }

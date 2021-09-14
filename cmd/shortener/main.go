@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -42,6 +43,7 @@ func SetupServer() mux.Router {
 
 	router.HandleFunc("/{key}", service.getHandler)
 	router.HandleFunc("/", service.postHandler)
+	router.HandleFunc("/api/shorten", service.postJsonHandler)
 
 	return *router
 }
@@ -74,6 +76,44 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("http://localhost:8080/" + code))
+}
+
+func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
+	type Url struct {
+		url string
+	}
+
+	type Result struct {
+		result string
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		http.Error(w, "Unable to read request body", http.StatusBadRequest)
+	}
+
+	link := Url{}
+
+	json.Unmarshal(body, &link)
+
+	if !isURL(link.url) {
+		http.Error(w, "Invalid link", http.StatusBadRequest)
+		return
+	}
+
+	code := generateCode()
+
+	s.repository.Set(code, link.url)
+
+	rawResult := Result{
+		"http://localhost:8080/" + code,
+	}
+
+	jsonResult, _ := json.Marshal(rawResult)
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonResult)
 }
 
 func main() {
