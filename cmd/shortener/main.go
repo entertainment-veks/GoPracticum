@@ -32,7 +32,6 @@ func isURL(token string) bool {
 
 type Service struct {
 	repository *repository.Repository
-	mainURL    string
 }
 
 type URL struct {
@@ -43,10 +42,9 @@ type Result struct {
 	Result string `json:"result"`
 }
 
-func SetupServer(mainURL string) mux.Router {
+func SetupServer() mux.Router {
 	service := Service{
 		repository.NewRepository(),
-		mainURL,
 	}
 
 	router := mux.NewRouter()
@@ -85,7 +83,7 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(s.mainURL + code))
+	w.Write([]byte("https://localhost:8080/" + code))
 }
 
 func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +107,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link.URL)
 
 	rawResult := Result{
-		s.mainURL + code,
+		"https://localhost:8080/" + code,
 	}
 
 	w.Header().Add("Content-Type", "json")
@@ -118,7 +116,6 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	mainURL := "https://localhost:8080/"
-	router := SetupServer(mainURL)
+	router := SetupServer()
 	http.ListenAndServe(":8080", &router)
 }
