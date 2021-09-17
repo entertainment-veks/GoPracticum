@@ -58,7 +58,7 @@ func Test_Endpoints(t *testing.T) {
 		defer request.Body.Close()
 
 		w := httptest.NewRecorder()
-		router := SetupServer()
+		router := SetupServer("https://localhost:8080/")
 		router.ServeHTTP(w, request)
 
 		response := w.Result()
@@ -79,7 +79,7 @@ func Test_Endpoints(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, linkForGetTest, nil)
 
 		w := httptest.NewRecorder()
-		router := SetupServer()
+		router := SetupServer("https://localhost:8080/")
 		router.ServeHTTP(w, request)
 
 		response := w.Result()
@@ -100,7 +100,7 @@ func Test_Endpoints(t *testing.T) {
 		defer request.Body.Close()
 
 		w := httptest.NewRecorder()
-		router := SetupServer()
+		router := SetupServer("https://localhost:8080/")
 		router.ServeHTTP(w, request)
 
 		response := w.Result()
