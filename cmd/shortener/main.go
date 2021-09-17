@@ -122,7 +122,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link.URL)
 
 	rawResult := Result{
-		os.Getenv(s.mainURL) + code,
+		s.mainURL + code,
 	}
 
 	w.Header().Add("Content-Type", "application/json")
