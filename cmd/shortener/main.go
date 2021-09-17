@@ -32,7 +32,7 @@ func isURL(token string) bool {
 
 type Service struct {
 	repository *repository.Repository
-	mainUrl    string
+	mainURL    string
 }
 
 type Url struct {
@@ -43,17 +43,17 @@ type Result struct {
 	Result string `json:"result"`
 }
 
-func SetupServer(mainUrl string) mux.Router {
+func SetupServer(mainURL string) mux.Router {
 	service := Service{
 		repository.NewRepository(),
-		mainUrl,
+		mainURL,
 	}
 
 	router := mux.NewRouter()
 
 	router.HandleFunc("/{key}", service.getHandler)
 	router.HandleFunc("/", service.postHandler)
-	router.HandleFunc("/api/shorten", service.postJsonHandler)
+	router.HandleFunc("/api/shorten", service.postJSONHandler)
 
 	return *router
 }
@@ -85,10 +85,10 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(s.mainUrl + code))
+	w.Write([]byte(s.mainURL + code))
 }
 
-func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -109,7 +109,7 @@ func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link.Url)
 
 	rawResult := Result{
-		s.mainUrl + code,
+		s.mainURL + code,
 	}
 
 	w.Header().Add("Content-Type", "json")
@@ -118,7 +118,7 @@ func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	mainUrl := "https://localhost:8080/"
-	router := SetupServer(mainUrl)
+	mainURL := "https://localhost:8080/"
+	router := SetupServer(mainURL)
 	http.ListenAndServe(":8080", &router)
 }
