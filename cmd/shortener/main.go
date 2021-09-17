@@ -57,6 +57,10 @@ func SetupServer() mux.Router {
 }
 
 func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		return
+	}
+
 	vars := mux.Vars(r)
 	code := s.repository.Get(vars["key"])
 
@@ -65,6 +69,10 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -87,6 +95,10 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
