@@ -35,8 +35,8 @@ type Service struct {
 	mainURL    string
 }
 
-type Url struct {
-	Url string `json:"url"`
+type URL struct {
+	URL string `json:"url"`
 }
 
 type Result struct {
@@ -95,18 +95,18 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to read request body", http.StatusBadRequest)
 	}
 
-	link := Url{}
+	link := URL{}
 
 	json.Unmarshal(body, &link)
 
-	if !isURL(link.Url) {
+	if !isURL(link.URL) {
 		http.Error(w, "Invalid link", http.StatusBadRequest)
 		return
 	}
 
 	code := generateCode()
 
-	s.repository.Set(code, link.Url)
+	s.repository.Set(code, link.URL)
 
 	rawResult := Result{
 		s.mainURL + code,
