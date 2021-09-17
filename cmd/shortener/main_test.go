@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -50,6 +51,8 @@ func Test_Endpoints(t *testing.T) {
 			},
 		},
 	}
+
+	os.Setenv("MAIN_URL", "http://localhost:8080/")
 
 	linkForGetTest := ""
 

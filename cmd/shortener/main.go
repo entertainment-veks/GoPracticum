@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 
 	"GoPracticum/cmd/shortener/repository"
 
@@ -32,6 +33,7 @@ func isURL(token string) bool {
 
 type Service struct {
 	repository *repository.Repository
+	mainURL    string
 }
 
 type URL struct {
@@ -45,6 +47,7 @@ type Result struct {
 func SetupServer() mux.Router {
 	service := Service{
 		repository.NewRepository(),
+		os.Getenv("MAIN_URL"),
 	}
 
 	router := mux.NewRouter()
@@ -91,7 +94,7 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("http://localhost:8080/" + code))
+	w.Write([]byte(s.mainURL + code))
 }
 
 func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +122,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link.URL)
 
 	rawResult := Result{
-		"http://localhost:8080/" + code,
+		os.Getenv(s.mainURL) + code,
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -128,6 +131,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	os.Setenv("MAIN_URL", "http://localhost:8080/")
 	router := SetupServer()
 	http.ListenAndServe(":8080", &router)
 }
