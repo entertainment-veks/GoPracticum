@@ -34,6 +34,14 @@ type Service struct {
 	repository *repository.Repository
 }
 
+type Url struct {
+	Url string `json:"url"`
+}
+
+type Result struct {
+	Result string `json:"result"`
+}
+
 func SetupServer() mux.Router {
 	service := Service{
 		repository.NewRepository(),
@@ -79,14 +87,6 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
-	type Url struct {
-		url string
-	}
-
-	type Result struct {
-		result string
-	}
-
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -97,14 +97,14 @@ func (s *Service) postJsonHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.Unmarshal(body, &link)
 
-	if !isURL(link.url) {
+	if !isURL(link.Url) {
 		http.Error(w, "Invalid link", http.StatusBadRequest)
 		return
 	}
 
 	code := generateCode()
 
-	s.repository.Set(code, link.url)
+	s.repository.Set(code, link.Url)
 
 	rawResult := Result{
 		"http://localhost:8080/" + code,
