@@ -104,6 +104,7 @@ func Test_Endpoints(t *testing.T) {
 		router.ServeHTTP(w, request)
 
 		response := w.Result()
+		defer response.Body.Close()
 
 		if tests[2].want.code != response.StatusCode {
 			t.Errorf("Expected code: %v, Actual: %v", tests[2].want.code, response.StatusCode)
