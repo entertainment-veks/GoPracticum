@@ -23,7 +23,7 @@ func Test_Endpoints(t *testing.T) {
 		want   want
 	}{
 		{
-			name:   "POST-endpoint test",
+			name:   "'/' - endpoint test",
 			method: http.MethodPost,
 			url:    "https://localhost:8080/",
 			data:   "https://www.google.com/",
@@ -32,7 +32,7 @@ func Test_Endpoints(t *testing.T) {
 			},
 		},
 		{
-			name:   "GET-endpoint test",
+			name:   "'/{key}' - endpoint test",
 			method: http.MethodGet,
 			want: want{
 				code:        http.StatusTemporaryRedirect,
@@ -40,11 +40,20 @@ func Test_Endpoints(t *testing.T) {
 				data:        "https://www.google.com/",
 			},
 		},
+		{
+			name:   "'/api/shorten' - endpoint test",
+			method: http.MethodPost,
+			url:    "https://localhost:8080/api/shorten",
+			data:   `{"url": "https://www.google.com/"}`,
+			want: want{
+				code: http.StatusCreated,
+			},
+		},
 	}
 
 	linkForGetTest := ""
 
-	t.Run(tests[0].name, func(t *testing.T) { //POST method
+	t.Run(tests[0].name, func(t *testing.T) { // '/' method
 		request := httptest.NewRequest(http.MethodPost, tests[0].url, bytes.NewBufferString(tests[0].data))
 		defer request.Body.Close()
 
@@ -66,7 +75,7 @@ func Test_Endpoints(t *testing.T) {
 		linkForGetTest = string(resBody)
 	})
 
-	t.Run(tests[1].name, func(t *testing.T) { //GET method
+	t.Run(tests[1].name, func(t *testing.T) { // '/{key}' method
 		request := httptest.NewRequest(http.MethodGet, linkForGetTest, nil)
 
 		w := httptest.NewRecorder()
@@ -83,6 +92,21 @@ func Test_Endpoints(t *testing.T) {
 
 		if tests[1].want.data == response.Header.Get(tests[1].want.contentType) {
 			t.Errorf("Expected body: %v, Actual: %v", tests[1].want.data, response.Header.Get(tests[1].want.contentType))
+		}
+	})
+
+	t.Run(tests[2].name, func(t *testing.T) { // '/api/shorten' method
+		request := httptest.NewRequest(http.MethodPost, tests[2].url, bytes.NewBufferString(tests[2].data))
+		defer request.Body.Close()
+
+		w := httptest.NewRecorder()
+		router := SetupServer()
+		router.ServeHTTP(w, request)
+
+		response := w.Result()
+
+		if tests[2].want.code != response.StatusCode {
+			t.Errorf("Expected code: %v, Actual: %v", tests[2].want.code, response.StatusCode)
 		}
 	})
 }
