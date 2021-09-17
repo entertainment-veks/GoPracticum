@@ -91,7 +91,7 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("https://localhost:8080/" + code))
+	w.Write([]byte("http://localhost:8080/" + code))
 }
 
 func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +119,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link.URL)
 
 	rawResult := Result{
-		"https://localhost:8080/" + code,
+		"http://localhost:8080/" + code,
 	}
 
 	w.Header().Add("Content-Type", "application/json")
