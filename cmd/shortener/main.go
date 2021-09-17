@@ -122,6 +122,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 		"https://localhost:8080/" + code,
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(rawResult)
 }
