@@ -131,8 +131,10 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	os.Setenv("SERVER_ADDRESS", ":8080")
-	os.Setenv("BASE_URL", "http://localhost:8080")
+	if len(os.Getenv("SERVER_ADDRESS")) == 0 && len(os.Getenv("BASE_URL")) == 0 {
+		os.Setenv("SERVER_ADDRESS", ":8080")
+		os.Setenv("BASE_URL", "http://localhost:8080")
+	}
 
 	router := SetupServer()
 	http.ListenAndServe(os.Getenv("SERVER_ADDRESS"), &router)
