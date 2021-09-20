@@ -94,7 +94,7 @@ func (s *Service) postHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(s.baseURL + code))
+	w.Write([]byte(s.baseURL + "/" + code))
 }
 
 func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +122,7 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 	s.repository.Set(code, link.URL)
 
 	rawResult := Result{
-		s.baseURL + code,
+		s.baseURL + "/" + code,
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -131,6 +131,9 @@ func (s *Service) postJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	os.Setenv("SERVER_ADDRESS", ":8080")
+	os.Setenv("BASE_URL", "http://localhost:8080")
+
 	router := SetupServer()
 	http.ListenAndServe(os.Getenv("SERVER_ADDRESS"), &router)
 }
