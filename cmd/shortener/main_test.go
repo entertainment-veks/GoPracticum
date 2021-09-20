@@ -52,7 +52,8 @@ func Test_Endpoints(t *testing.T) {
 		},
 	}
 
-	os.Setenv("MAIN_URL", "http://localhost:8080/")
+	os.Setenv("SERVER_ADDRESS", ":8080")
+	os.Setenv("BASE_URL", "http://localhost:8080/")
 
 	linkForGetTest := ""
 
