@@ -26,8 +26,6 @@ func init() {
 		os.Setenv("FILE_STORAGE_PATH", s)
 		return nil
 	})
-
-	flag.Parse()
 }
 
 func SetupServer() mux.Router {
@@ -47,6 +45,8 @@ func SetupServer() mux.Router {
 }
 
 func main() {
+
+	flag.Parse()
 
 	if len(os.Getenv("SERVER_ADDRESS")) == 0 {
 		os.Setenv("SERVER_ADDRESS", ":8080")
