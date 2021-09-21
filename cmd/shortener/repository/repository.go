@@ -18,9 +18,9 @@ type Repository struct {
 	mu       *sync.Mutex // <- нужно для потокобезопасной записи в мапку, об этом в курсе рассказывается далее, пока просто добавь ее)
 }
 
-type entity struct {
-	key   string
-	value string
+type Entity struct {
+	Key   string
+	Value string
 }
 
 func (r *Repository) Get(key string) (string, error) {
@@ -32,7 +32,7 @@ func (r *Repository) Get(key string) (string, error) {
 		return "", err
 	}
 	scanner := bufio.NewScanner(file)
-	decoded := entity{}
+	decoded := Entity{}
 
 	for currentKey := ""; currentKey != key; {
 		if !scanner.Scan() {
@@ -43,10 +43,10 @@ func (r *Repository) Get(key string) (string, error) {
 			return "", err
 		}
 
-		currentKey = decoded.key
+		currentKey = decoded.Key
 	}
 
-	return decoded.value, nil
+	return decoded.Value, nil
 }
 
 func (r *Repository) Set(key string, value string) error {
@@ -59,7 +59,7 @@ func (r *Repository) Set(key string, value string) error {
 	}
 
 	var encoded bytes.Buffer
-	if err := gob.NewEncoder(&encoded).Encode(entity{key, value}); err != nil {
+	if err := gob.NewEncoder(&encoded).Encode(Entity{key, value}); err != nil {
 		return err
 	}
 

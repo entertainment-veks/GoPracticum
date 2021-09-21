@@ -14,9 +14,12 @@ func GetHandler(s *repository.Service) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 		vars := mux.Vars(r)
-		code := s.Repository.Get(vars["key"])
+		link, err := s.Repository.Get(vars["key"])
+		if err != nil {
+			http.Error(w, "Cannot find link", http.StatusInternalServerError)
+		}
 
-		w.Header().Set("Location", code)
+		w.Header().Set("Location", link)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	}
 }

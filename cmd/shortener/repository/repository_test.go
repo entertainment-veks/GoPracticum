@@ -49,5 +49,5 @@ func TestRepository(t *testing.T) {
 		})
 	}
 
-	//os.Remove(fileName)
+	os.Remove(fileName)
 }

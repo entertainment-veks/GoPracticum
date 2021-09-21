@@ -1,6 +1,7 @@
 package util
 
 import (
+	"GoPracticum/cmd/shortener/repository"
 	"math/rand"
 	"net/url"
 )
@@ -12,7 +13,14 @@ func GenerateCode() string {
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
-	return string(b)
+	generatedCode := string(b)
+	//checking is generated code unic
+	//this thing does not tested because it's not stable
+	url, _ := repository.NewRepository().Get(generatedCode)
+	if len(url) != 0 {
+		return GenerateCode()
+	}
+	return generatedCode
 }
 
 func IsURL(token string) bool {

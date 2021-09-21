@@ -27,6 +27,8 @@ func SetupServer() mux.Router {
 }
 
 func main() {
+	os.Setenv("FILE_STORAGE_PATH", "file")
+
 	if len(os.Getenv("SERVER_ADDRESS")) == 0 && len(os.Getenv("BASE_URL")) == 0 {
 		os.Setenv("SERVER_ADDRESS", ":8080")
 		os.Setenv("BASE_URL", "http://localhost:8080")
