@@ -54,6 +54,7 @@ func Test_Endpoints(t *testing.T) {
 
 	os.Setenv("SERVER_ADDRESS", ":8080")
 	os.Setenv("BASE_URL", "http://localhost:8080")
+	os.Setenv("FILE_STORAGE_PATH", "file")
 
 	linkForGetTest := ""
 
@@ -94,7 +95,11 @@ func Test_Endpoints(t *testing.T) {
 
 		defer response.Body.Close()
 
-		if tests[1].want.data == response.Header.Get(tests[1].want.contentType) {
+		resBody, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tests[1].want.data == string(resBody) {
 			t.Errorf("Expected body: %v, Actual: %v", tests[1].want.data, response.Header.Get(tests[1].want.contentType))
 		}
 	})
