@@ -22,11 +22,15 @@ func PostJSONHandler(s *repository.Service) func(w http.ResponseWriter, r *http.
 
 		if err != nil {
 			http.Error(w, "Unable to read request body", http.StatusBadRequest)
+			return
 		}
 
 		link := URL{}
 
-		json.Unmarshal(body, &link)
+		if err := json.Unmarshal(body, &link); err != nil {
+			http.Error(w, "Unable to unmarshal link", http.StatusInternalServerError)
+			return
+		}
 
 		if !util.IsURL(link.URL) {
 			http.Error(w, "Invalid link", http.StatusBadRequest)
@@ -43,6 +47,8 @@ func PostJSONHandler(s *repository.Service) func(w http.ResponseWriter, r *http.
 
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(rawResult)
+		if err := json.NewEncoder(w).Encode(rawResult); err != nil {
+			http.Error(w, "Unable to encode result", http.StatusInternalServerError)
+		} //if it's not end, need to add 'return'
 	}
 }

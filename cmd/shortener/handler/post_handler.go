@@ -13,6 +13,7 @@ func PostHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Requ
 
 		if err != nil {
 			http.Error(w, "Unable to read request body", http.StatusBadRequest)
+			return
 		}
 
 		link := string(body)
