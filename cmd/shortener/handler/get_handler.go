@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"GoPracticum/cmd/shortener/repository"
+	"go_practicum/cmd/shortener/repository"
 
 	"github.com/gorilla/mux"
 )
@@ -13,7 +13,8 @@ func GetHandler(s *repository.Service) func(http.ResponseWriter, *http.Request) 
 		vars := mux.Vars(r)
 		link, err := s.Repository.Get(vars["key"])
 		if err != nil {
-			http.Error(w, "Cannot find link", http.StatusInternalServerError)
+			http.Error(w, "Error till finding url", http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Location", link)

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"GoPracticum/cmd/shortener/handler"
-	"GoPracticum/cmd/shortener/repository"
+	"go_practicum/cmd/shortener/handler"
+	"go_practicum/cmd/shortener/repository"
 
 	"github.com/gorilla/mux"
 )

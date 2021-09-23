@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"GoPracticum/cmd/shortener/repository"
-	"GoPracticum/cmd/shortener/util"
 	"encoding/json"
+	"go_practicum/cmd/shortener/repository"
+	"go_practicum/cmd/shortener/util"
 	"io/ioutil"
 	"net/http"
 )

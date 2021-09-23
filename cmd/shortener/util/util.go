@@ -1,7 +1,7 @@
 package util
 
 import (
-	"GoPracticum/cmd/shortener/repository"
+	"go_practicum/cmd/shortener/repository"
 	"math/rand"
 	"net/url"
 )

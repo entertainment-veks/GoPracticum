@@ -1,4 +1,4 @@
-module GoPracticum
+module go_practicum
 
 go 1.17
 
