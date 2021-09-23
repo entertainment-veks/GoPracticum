@@ -30,8 +30,9 @@ func init() {
 
 func SetupServer() mux.Router {
 
+	repo, _ := repository.NewRepository()
 	service := repository.Service{
-		Repository: repository.NewRepository(),
+		Repository: repo,
 		BaseURL:    os.Getenv("BASE_URL"),
 	}
 

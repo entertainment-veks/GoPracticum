@@ -21,13 +21,14 @@ func TestGenerateCode(t *testing.T) {
 	}
 
 	t.Run(tests[0].name, func(t *testing.T) {
-		if got := GenerateCode(); len(got) != tests[0].want {
+		if got, _ := GenerateCode(); len(got) != tests[0].want {
 			t.Errorf("GenerateCode() len is %v, want %v", got, tests[0].want)
 		}
 	})
 
 	t.Run(tests[1].name, func(t *testing.T) {
-		if got := reflect.TypeOf(GenerateCode()); got != tests[1].want {
+		generatedCode, _ := GenerateCode()
+		if got := reflect.TypeOf(generatedCode); got != tests[1].want {
 			t.Errorf("GenerateCode() type is %v, want %v", got, tests[1].want)
 		}
 	})

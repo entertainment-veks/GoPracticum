@@ -23,7 +23,11 @@ func PostHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		code := util.GenerateCode()
+		code, err := util.GenerateCode()
+		if err != nil {
+			http.Error(w, "Unable to generate unic-code", http.StatusInternalServerError)
+			return
+		}
 
 		s.Repository.Set(code, link)
 
