@@ -18,10 +18,6 @@ type Result struct {
 
 func PostJSONHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			return
-		}
-
 		body, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {

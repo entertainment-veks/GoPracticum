@@ -10,9 +10,6 @@ import (
 
 func GetHandler(s *repository.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			return
-		}
 		vars := mux.Vars(r)
 		link, err := s.Repository.Get(vars["key"])
 		if err != nil {
