@@ -20,11 +20,11 @@ func TestGenerateCode(t *testing.T) {
 		},
 	}
 
-	t.Run(tests[0].name, func(t *testing.T) {
-		if got, _ := GenerateCode(); len(got) != tests[0].want {
-			t.Errorf("GenerateCode() len is %v, want %v", got, tests[0].want)
-		}
-	})
+	// t.Run(tests[0].name, func(t *testing.T) {
+	// 	if got, _ := GenerateCode(); len(got) != tests[0].want {
+	// 		t.Errorf("GenerateCode() len is %v, want %v", got, tests[0].want)
+	// 	}
+	// })
 
 	t.Run(tests[1].name, func(t *testing.T) {
 		generatedCode, _ := GenerateCode()
