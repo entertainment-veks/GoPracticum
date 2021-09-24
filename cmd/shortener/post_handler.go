@@ -1,13 +1,12 @@
-package handler
+package main
 
 import (
-	"go_practicum/cmd/shortener/repository"
-	"go_practicum/cmd/shortener/util"
+	"go_practicum/cmd/shortener/pkg"
 	"io/ioutil"
 	"net/http"
 )
 
-func PostHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Request) {
+func PostHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 
@@ -18,12 +17,12 @@ func PostHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Requ
 
 		link := string(body)
 
-		if !util.IsURL(link) {
+		if !pkg.IsURL(link) {
 			http.Error(w, "Invalid link", http.StatusBadRequest)
 			return
 		}
 
-		code, err := util.GenerateCode()
+		code, err := pkg.GenerateCode()
 		if err != nil {
 			http.Error(w, "Unable to generate unic-code", http.StatusInternalServerError)
 			return

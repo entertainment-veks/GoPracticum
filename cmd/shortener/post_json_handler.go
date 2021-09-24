@@ -1,9 +1,8 @@
-package handler
+package main
 
 import (
 	"encoding/json"
-	"go_practicum/cmd/shortener/repository"
-	"go_practicum/cmd/shortener/util"
+	"go_practicum/cmd/shortener/pkg"
 	"io/ioutil"
 	"net/http"
 )
@@ -16,7 +15,7 @@ type Result struct {
 	Result string `json:"result"`
 }
 
-func PostJSONHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Request) {
+func PostJSONHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 
@@ -32,12 +31,12 @@ func PostJSONHandler(s *repository.Service) func(w http.ResponseWriter, r *http.
 			return
 		}
 
-		if !util.IsURL(link.URL) {
+		if !pkg.IsURL(link.URL) {
 			http.Error(w, "Invalid link", http.StatusBadRequest)
 			return
 		}
 
-		code, err := util.GenerateCode()
+		code, err := pkg.GenerateCode()
 		if err != nil {
 			http.Error(w, "Unable to generate unic-code", http.StatusInternalServerError)
 			return

@@ -1,4 +1,4 @@
-package util
+package pkg
 
 import (
 	"go_practicum/cmd/shortener/repository"
