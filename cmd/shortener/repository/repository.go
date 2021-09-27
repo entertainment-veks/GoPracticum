@@ -8,6 +8,11 @@ import (
 	"sync"
 )
 
+type Service struct {
+	Repository *Repository
+	BaseURL    string
+}
+
 type Repository struct {
 	file *os.File
 	mu   *sync.Mutex // <- нужно для потокобезопасной записи в мапку, об этом в курсе рассказывается далее, пока просто добавь ее)

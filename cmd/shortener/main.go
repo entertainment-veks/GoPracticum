@@ -5,15 +5,11 @@ import (
 	"net/http"
 	"os"
 
+	"go_practicum/cmd/shortener/handler"
 	"go_practicum/cmd/shortener/repository"
 
 	"github.com/gorilla/mux"
 )
-
-type Service struct {
-	Repository *repository.Repository
-	BaseURL    string
-}
 
 func init() {
 	flag.Func("a", "Server address", func(s string) error {
@@ -35,16 +31,16 @@ func init() {
 func SetupServer() mux.Router {
 
 	repo, _ := repository.NewRepository()
-	service := Service{
+	service := repository.Service{
 		Repository: repo,
 		BaseURL:    os.Getenv("BASE_URL"),
 	}
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{key}", GetHandler(&service)).Methods(http.MethodGet)
-	router.HandleFunc("/", PostHandler(&service)).Methods(http.MethodPost)
-	router.HandleFunc("/api/shorten", PostJSONHandler(&service)).Methods(http.MethodPost)
+	router.HandleFunc("/{key}", handler.GetHandler(&service)).Methods(http.MethodGet)
+	router.HandleFunc("/", handler.PostHandler(&service)).Methods(http.MethodPost)
+	router.HandleFunc("/api/shorten", handler.PostJSONHandler(&service)).Methods(http.MethodPost)
 
 	return *router
 }
