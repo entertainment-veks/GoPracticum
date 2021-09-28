@@ -1,13 +1,12 @@
-package handler
+package main
 
 import (
-	"go_practicum/cmd/shortener/repository"
-	"go_practicum/cmd/shortener/util"
+	"go_practicum/internal/util"
 	"io/ioutil"
 	"net/http"
 )
 
-func PostHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Request) {
+func PostHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 

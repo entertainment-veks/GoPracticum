@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"os"
 
-	"go_practicum/cmd/shortener/handler"
-	"go_practicum/cmd/shortener/repository"
+	"go_practicum/internal/repository"
 
 	"github.com/gorilla/mux"
 )
+
+type Service struct {
+	Repository *repository.Repository
+	BaseURL    string
+}
 
 func init() {
 	flag.Func("a", "Server address", func(s string) error {
@@ -28,19 +32,19 @@ func init() {
 	})
 }
 
-func SetupServer() mux.Router {
+func SetupServer(file *os.File) mux.Router {
 
-	repo, _ := repository.NewRepository()
-	service := repository.Service{
+	repo := repository.NewRepository(file)
+	service := Service{
 		Repository: repo,
 		BaseURL:    os.Getenv("BASE_URL"),
 	}
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{key}", handler.GetHandler(&service)).Methods(http.MethodGet)
-	router.HandleFunc("/", handler.PostHandler(&service)).Methods(http.MethodPost)
-	router.HandleFunc("/api/shorten", handler.PostJSONHandler(&service)).Methods(http.MethodPost)
+	router.HandleFunc("/{key}", GetHandler(&service)).Methods(http.MethodGet)
+	router.HandleFunc("/", PostHandler(&service)).Methods(http.MethodPost)
+	router.HandleFunc("/api/shorten", PostJSONHandler(&service)).Methods(http.MethodPost)
 
 	return *router
 }
@@ -61,6 +65,7 @@ func main() {
 		os.Setenv("FILE_STORAGE_PATH", "file")
 	}
 
-	router := SetupServer()
+	file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	router := SetupServer(file)
 	http.ListenAndServe(os.Getenv("SERVER_ADDRESS"), &router)
 }

@@ -4,17 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/gob"
+	"go_practicum/internal/util"
 	"os"
 	"sync"
 )
 
-type Service struct {
-	Repository *Repository
-	BaseURL    string
-}
-
 type Repository struct {
-	file *os.File
+	file *util.FilerReader
 	mu   *sync.Mutex // <- нужно для потокобезопасной записи в мапку, об этом в курсе рассказывается далее, пока просто добавь ее)
 }
 
@@ -58,17 +54,11 @@ func (r *Repository) Set(key string, value string) error {
 	return err
 }
 
-func NewRepository() (*Repository, error) {
-	file, err := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		return &Repository{}, err
-	}
+func NewRepository(file *os.File) *Repository {
 	return &Repository{
-		file: file,
-		mu:   &sync.Mutex{},
-	}, nil
-}
-
-func (r *Repository) Close() error {
-	return r.file.Close()
+		file: &util.FilerReader{
+			file,
+		},
+		mu: &sync.Mutex{},
+	}
 }

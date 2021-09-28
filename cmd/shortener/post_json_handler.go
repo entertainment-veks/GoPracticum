@@ -1,9 +1,8 @@
-package handler
+package main
 
 import (
 	"encoding/json"
-	"go_practicum/cmd/shortener/repository"
-	"go_practicum/cmd/shortener/util"
+	"go_practicum/internal/util"
 	"io/ioutil"
 	"net/http"
 )
@@ -16,7 +15,7 @@ type Result struct {
 	Result string `json:"result"`
 }
 
-func PostJSONHandler(s *repository.Service) func(w http.ResponseWriter, r *http.Request) {
+func PostJSONHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 
