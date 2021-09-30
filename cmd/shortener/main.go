@@ -1,68 +1,71 @@
 package main
 
 import (
-	"io/ioutil"
-	"math/rand"
+	"flag"
 	"net/http"
-	"net/url"
+	"os"
+
+	"go_practicum/internal/repository"
 
 	"github.com/gorilla/mux"
 )
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func generateCode() string {
-	b := make([]byte, 5)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
+type Service struct {
+	Repository *repository.Repository
+	BaseURL    string
 }
 
-func isURL(token string) bool {
-	if len(token) == 0 {
-		return false
-	}
-	_, err := url.ParseRequestURI(token)
-	return err == nil
+func init() {
+	flag.Func("a", "Server address", func(s string) error {
+		os.Setenv("SERVER_ADDRESS", s)
+		return nil
+	})
+
+	flag.Func("b", "Base url", func(s string) error {
+		os.Setenv("BASE_URL", s)
+		return nil
+	})
+
+	flag.Func("f", "File storage path", func(s string) error {
+		os.Setenv("FILE_STORAGE_PATH", s)
+		return nil
+	})
 }
 
-func main() {
-	database := make(map[string]string)
+func SetupServer(file *os.File) mux.Router {
+
+	repo := repository.NewRepository(file)
+	service := Service{
+		Repository: repo,
+		BaseURL:    os.Getenv("BASE_URL"),
+	}
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{key}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		code := database[vars["key"]]
+	router.HandleFunc("/{key}", GetHandler(&service)).Methods(http.MethodGet)
+	router.HandleFunc("/", PostHandler(&service)).Methods(http.MethodPost)
+	router.HandleFunc("/api/shorten", PostJSONHandler(&service)).Methods(http.MethodPost)
 
-		w.Header().Set("Location", code)
-		w.WriteHeader(307)
-	})
+	return *router
+}
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		temp := r.Body
+func main() {
 
-		body, err := ioutil.ReadAll(temp)
+	flag.Parse()
 
-		if err != nil {
-			panic(err)
-		}
+	if len(os.Getenv("SERVER_ADDRESS")) == 0 {
+		os.Setenv("SERVER_ADDRESS", ":8080")
+	}
 
-		link := string(body)
+	if len(os.Getenv("BASE_URL")) == 0 {
+		os.Setenv("BASE_URL", "http://localhost:8080")
+	}
 
-		if !isURL(link) {
-			w.WriteHeader(400)
-			return
-		}
+	if len(os.Getenv("FILE_STORAGE_PATH")) == 0 {
+		os.Setenv("FILE_STORAGE_PATH", "file")
+	}
 
-		var code = generateCode()
-
-		database[code] = link
-
-		w.WriteHeader(201)
-		w.Write([]byte("http://localhost:8080/" + code))
-	})
-
-	http.ListenAndServe(":8080", router)
+	file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	router := SetupServer(file)
+	http.ListenAndServe(os.Getenv("SERVER_ADDRESS"), &router)
 }
