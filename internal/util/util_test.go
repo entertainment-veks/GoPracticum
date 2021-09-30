@@ -32,7 +32,6 @@ func TestGenerateCode(t *testing.T) {
 			t.Errorf("GenerateCode() type is %v, want %v", got, tests[1].want)
 		}
 	})
-
 }
 
 func TestIsURL(t *testing.T) {
