@@ -43,8 +43,8 @@ func SetupServer(file *os.File) mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/{key}", GetHandler(&service)).Methods(http.MethodGet)
-	router.HandleFunc("/", PostHandler(&service)).Methods(http.MethodPost)
-	router.HandleFunc("/api/shorten", PostJSONHandler(&service)).Methods(http.MethodPost)
+	router.Handle("/", GzipMiddleware(PostHandler(&service))).Methods(http.MethodPost)
+	router.Handle("/api/shorten", GzipMiddleware(PostJSONHandler(&service))).Methods(http.MethodPost)
 
 	return *router
 }

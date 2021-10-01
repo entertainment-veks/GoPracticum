@@ -6,8 +6,8 @@ import (
 	"net/http"
 )
 
-func PostHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func PostHandler(s *Service) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {
@@ -32,5 +32,5 @@ func PostHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(s.BaseURL + "/" + code))
-	}
+	})
 }

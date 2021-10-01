@@ -15,8 +15,8 @@ type Result struct {
 	Result string `json:"result"`
 }
 
-func PostJSONHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func PostJSONHandler(s *Service) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {
@@ -53,5 +53,5 @@ func PostJSONHandler(s *Service) func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(rawResult); err != nil {
 			http.Error(w, "Unable to encode result", http.StatusInternalServerError)
 		} //if it's not end, need to add 'return'
-	}
+	})
 }
