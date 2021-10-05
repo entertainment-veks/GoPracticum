@@ -6,8 +6,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetHandler(s *Service) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func GetHandler(s *Service) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		link, err := s.Repository.Get(vars["key"])
 		if err != nil {
@@ -17,5 +17,5 @@ func GetHandler(s *Service) func(http.ResponseWriter, *http.Request) {
 
 		w.Header().Set("Location", link)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-	}
+	})
 }

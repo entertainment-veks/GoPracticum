@@ -32,7 +32,8 @@ func init() {
 	})
 }
 
-func SetupServer(file *os.File) mux.Router {
+func SetupServer() mux.Router {
+	file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 
 	repo := repository.NewRepository(file)
 	service := Service{
@@ -42,9 +43,9 @@ func SetupServer(file *os.File) mux.Router {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{key}", GetHandler(&service)).Methods(http.MethodGet)
-	router.Handle("/", GzipMiddleware(PostHandler(&service))).Methods(http.MethodPost)
-	router.Handle("/api/shorten", GzipMiddleware(PostJSONHandler(&service))).Methods(http.MethodPost)
+	router.Handle("/{key}", GzipMiddleware(GetHandler(&service))).Methods(http.MethodGet)
+	router.Handle("/", GunzipMiddleware(PostHandler(&service))).Methods(http.MethodPost)
+	router.Handle("/api/shorten", GunzipMiddleware(PostJSONHandler(&service))).Methods(http.MethodPost)
 
 	return *router
 }
@@ -65,7 +66,6 @@ func main() {
 		os.Setenv("FILE_STORAGE_PATH", "file")
 	}
 
-	file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-	router := SetupServer(file)
+	router := SetupServer()
 	http.ListenAndServe(os.Getenv("SERVER_ADDRESS"), &router)
 }

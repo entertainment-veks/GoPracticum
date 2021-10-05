@@ -64,8 +64,7 @@ func Test_Endpoints(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-		router := SetupServer(file)
+		router := SetupServer()
 		router.ServeHTTP(w, request)
 
 		response := w.Result()
@@ -87,8 +86,7 @@ func Test_Endpoints(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-		router := SetupServer(file)
+		router := SetupServer()
 		router.ServeHTTP(w, request)
 
 		response := w.Result()
@@ -114,8 +112,7 @@ func Test_Endpoints(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		file, _ := os.OpenFile(os.Getenv("FILE_STORAGE_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-		router := SetupServer(file)
+		router := SetupServer()
 		router.ServeHTTP(w, request)
 
 		response := w.Result()

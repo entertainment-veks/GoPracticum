@@ -9,7 +9,6 @@ import (
 func PostHandler(s *Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
-
 		if err != nil {
 			http.Error(w, "Unable to read request body", http.StatusBadRequest)
 			return
