@@ -50,6 +50,7 @@ func TestGunzipMiddleware(t *testing.T) {
 			router.ServeHTTP(writer, req)
 
 			resp := writer.Result()
+			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusCreated {
 				t.Errorf("got = %v, want = %v", resp.StatusCode, http.StatusOK)

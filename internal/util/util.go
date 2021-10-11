@@ -1,24 +1,21 @@
 package util
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"encoding/hex"
 	"net/url"
-	"time"
 )
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func init() {
-	rand.Seed(time.Now().Unix())
-}
+const CODE_LENGTH int = 5
 
 func GenerateCode() (string, error) {
-	b := make([]byte, 5)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	b := make([]byte, CODE_LENGTH)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
 	}
 
-	return string(b), nil
+	return hex.EncodeToString(b), nil
 }
 
 func IsURL(token string) bool {
