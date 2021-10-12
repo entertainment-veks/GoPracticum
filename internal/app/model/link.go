@@ -6,9 +6,10 @@ import (
 )
 
 type Link struct {
-	ID   int
-	Link string
-	Code string
+	ID     int
+	Link   string
+	Code   string
+	UserID string
 }
 
 func (l *Link) Validate() error {
@@ -16,5 +17,6 @@ func (l *Link) Validate() error {
 		l,
 		validation.Field(&l.Link, validation.Required, is.URL),
 		validation.Field(&l.Code, validation.Required),
+		validation.Field(&l.UserID, validation.Required),
 	)
 }

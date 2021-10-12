@@ -2,7 +2,6 @@ package shortener
 
 import (
 	"flag"
-	"go_practicum/internal/app/store"
 	"os"
 )
 
@@ -15,7 +14,7 @@ type Config struct {
 	ServerAddress   string
 	BaseURL         string
 	FileStoragePath string
-	StoreConfig     *store.Config
+	DatabaseURL     string
 }
 
 func NewConfig() *Config {
@@ -23,7 +22,7 @@ func NewConfig() *Config {
 		ServerAddress:   ":8080",
 		BaseURL:         "http://localhost:8080",
 		FileStoragePath: "file",
-		StoreConfig:     store.NewConfig("host=localhost dbname=shortener_db sslmode=disable user=postgres password=postgres"),
+		DatabaseURL:     "host=localhost dbname=shortener_db sslmode=disable user=postgres password=postgres",
 	}
 }
 
@@ -41,7 +40,7 @@ func (c *Config) ConfigureViaEnv() {
 	}
 
 	if len(os.Getenv(DATABASE_DSN_KEY)) != 0 {
-		c.StoreConfig.DatabseURL = os.Getenv(DATABASE_DSN_KEY)
+		c.DatabaseURL = os.Getenv(DATABASE_DSN_KEY)
 	}
 }
 
@@ -62,7 +61,7 @@ func (c *Config) ConfigureViaFlags() {
 	})
 
 	flag.Func("d", "Database path", func(s string) error {
-		c.StoreConfig.DatabseURL = s
+		c.DatabaseURL = s
 		return nil
 	})
 

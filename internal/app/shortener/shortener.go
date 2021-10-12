@@ -1,49 +1,35 @@
 package shortener
 
 import (
-	"fmt"
-	"go_practicum/internal/app/store"
+	"database/sql"
+	"go_practicum/internal/app/store/sqlstore"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
-type Shortener struct {
-	config *Config
-	router *mux.Router
-	store  *store.Store
-}
+const DRIVER_NAME = "postgres"
 
-func New(config *Config) *Shortener {
-	return &Shortener{
-		config: config,
-		router: mux.NewRouter(),
-	}
-}
-
-func (s *Shortener) Start() error {
-	s.configureRouter()
-	if err := s.configureStore(); err != nil {
+func Start(config *Config) error {
+	db, err := newDB(config.DatabaseURL)
+	if err != nil {
 		return err
 	}
 
-	fmt.Println("Starting server")
-	return http.ListenAndServe(s.config.ServerAddress, s.router)
+	defer db.Close()
+	store := sqlstore.New(db)
+	s := newServer(store, config.BaseURL)
+
+	return http.ListenAndServe(config.ServerAddress, s)
 }
 
-func (s *Shortener) configureRouter() {
-	// s.router.Handle("/{key}", AuthMiddleware(GzipMiddleware(GetHandler(&service)))).Methods(http.MethodGet)
-	// s.router.Handle("/", AuthMiddleware(GunzipMiddleware(PostHandler(&service)))).Methods(http.MethodPost)
-	// s.router.Handle("/api/shorten", AuthMiddleware(GunzipMiddleware(PostJSONHandler(&service)))).Methods(http.MethodPost)
-	// s.router.Handle("/user/urls", UserURLsHandler(&service))
-}
-
-func (s *Shortener) configureStore() error {
-	st := store.New(s.config.StoreConfig)
-	if err := st.Open(); err != nil {
-		return err
+func newDB(databaseURL string) (*sql.DB, error) {
+	db, err := sql.Open(DRIVER_NAME, databaseURL)
+	if err != nil {
+		return nil, err
 	}
 
-	s.store = st
-	return nil
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
