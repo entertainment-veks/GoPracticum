@@ -29,3 +29,18 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 
 	return l, nil
 }
+
+func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
+	result := []*model.Link{}
+	for _, current := range r.links {
+		if current.UserID == id {
+			result = append(result, current)
+		}
+	}
+
+	if len(result) == 0 {
+		return nil, store.ErrRecordNotFound
+	}
+
+	return result, nil
+}

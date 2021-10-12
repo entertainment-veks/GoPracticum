@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"encoding/json"
 	"go_practicum/internal/app/model"
 	"go_practicum/internal/app/store"
@@ -12,8 +13,11 @@ import (
 )
 
 const (
-	USERID_COOKIE_KEY = "userid"
+	USERID_COOKIE_KEY         = "userid"
+	USERID_CONTEXT_KEY ctxKey = iota
 )
+
+type ctxKey int8
 
 type server struct {
 	router  *mux.Router
@@ -42,7 +46,7 @@ func (s *server) configureRouter() {
 	s.router.Handle("/api/shorten", s.handleLinkCreateJSON()).Methods(http.MethodPost)
 	s.router.Handle("/{key}", s.handleLinkGet()).Methods(http.MethodGet)
 
-	//s.router = s.authMiddleware(s.router)
+	s.router.Use(s.authMiddleware)
 
 	// s.router.Handle("/{key}", AuthMiddleware(GzipMiddleware(GetHandler(&service)))).Methods(http.MethodGet)
 	// s.router.Handle("/", AuthMiddleware(GunzipMiddleware(PostHandler(&service)))).Methods(http.MethodPost)
@@ -75,7 +79,6 @@ func (s *server) handleLinkCreate() http.HandlerFunc {
 			return
 		}
 
-		userIdCookie, err := r.Cookie(USERID_COOKIE_KEY)
 		if err != nil {
 			s.error(w, r, http.StatusInternalServerError, err)
 			return
@@ -84,7 +87,7 @@ func (s *server) handleLinkCreate() http.HandlerFunc {
 		s.store.Link().Create(&model.Link{
 			Link:   string(body),
 			Code:   code,
-			UserID: userIdCookie.Value,
+			UserID: r.Context().Value(USERID_CONTEXT_KEY).(string),
 		})
 
 		s.respond(w, r, http.StatusCreated, s.baseURL+"/"+code)
@@ -113,7 +116,6 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 			return
 		}
 
-		userIdCookie, err := r.Cookie(USERID_COOKIE_KEY)
 		if err != nil {
 			s.error(w, r, http.StatusInternalServerError, err)
 			return
@@ -122,7 +124,7 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 		l := &model.Link{
 			Link:   req.Link,
 			Code:   code,
-			UserID: userIdCookie.Value,
+			UserID: r.Context().Value(USERID_CONTEXT_KEY).(string),
 		}
 		if err := s.store.Link().Create(l); err != nil {
 			s.error(w, r, http.StatusUnprocessableEntity, err)
@@ -155,21 +157,22 @@ func (s *server) handleLinkGet() http.HandlerFunc {
 
 func (s *server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie(USERID_COOKIE_KEY)
+		_, err := r.Cookie(USERID_COOKIE_KEY)
 
+		var newUserId string
 		if err == http.ErrNoCookie {
-			newUserId, err := util.GenerateCode()
+			newUserId, err = util.GenerateCode()
 			if err != nil {
 				s.error(w, r, http.StatusInternalServerError, err)
 			}
 
-			cookie = &http.Cookie{
+			cookie := &http.Cookie{
 				Name:  USERID_COOKIE_KEY,
 				Value: newUserId,
 			}
 			http.SetCookie(w, cookie)
 		}
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), USERID_CONTEXT_KEY, newUserId)))
 	})
 }

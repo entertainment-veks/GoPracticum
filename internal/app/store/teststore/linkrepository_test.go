@@ -29,3 +29,18 @@ func TestLinkRepository_GetByCode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, l)
 }
+
+func TestLinkRepository_GetAllByUseID(t *testing.T) {
+	s := teststore.New()
+
+	userID := "example"
+	_, err := s.Link().GetAllByUserID(userID)
+	assert.EqualError(t, err, store.ErrRecordNotFound.Error())
+
+	l := model.TestLink()
+	l.UserID = userID
+	s.Link().Create(l)
+	ls, err := s.Link().GetAllByUserID(userID)
+	assert.NoError(t, err)
+	assert.NotNil(t, ls)
+}
