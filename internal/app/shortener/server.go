@@ -1,13 +1,16 @@
 package shortener
 
 import (
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"go_practicum/internal/app/model"
 	"go_practicum/internal/app/store"
 	"go_practicum/internal/app/util"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -45,13 +48,10 @@ func (s *server) configureRouter() {
 	s.router.Handle("/", s.handleLinkCreate()).Methods(http.MethodPost)
 	s.router.Handle("/api/shorten", s.handleLinkCreateJSON()).Methods(http.MethodPost)
 	s.router.Handle("/{key}", s.handleLinkGet()).Methods(http.MethodGet)
+	s.router.Handle("/user/urls", s.handleUserLinks()).Methods(http.MethodGet)
 
 	s.router.Use(s.authMiddleware)
-
-	// s.router.Handle("/{key}", AuthMiddleware(GzipMiddleware(GetHandler(&service)))).Methods(http.MethodGet)
-	// s.router.Handle("/", AuthMiddleware(GunzipMiddleware(PostHandler(&service)))).Methods(http.MethodPost)
-	// s.router.Handle("/api/shorten", AuthMiddleware(GunzipMiddleware(PostJSONHandler(&service)))).Methods(http.MethodPost)
-	// s.router.Handle("/user/urls", UserURLsHandler(&service))
+	//s.router.Use(s.gzipMiddleware)
 }
 
 func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err error) {
@@ -79,16 +79,14 @@ func (s *server) handleLinkCreate() http.HandlerFunc {
 			return
 		}
 
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
-		s.store.Link().Create(&model.Link{
+		if err := s.store.Link().Create(&model.Link{
 			Link:   string(body),
 			Code:   code,
 			UserID: r.Context().Value(USERID_CONTEXT_KEY).(string),
-		})
+		}); err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
 
 		s.respond(w, r, http.StatusCreated, s.baseURL+"/"+code)
 	}
@@ -137,6 +135,7 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 		w.Header().Add("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(rawResult); err != nil {
 			s.error(w, r, http.StatusInternalServerError, err)
+			return
 		}
 		s.respond(w, r, http.StatusCreated, "")
 	}
@@ -155,15 +154,48 @@ func (s *server) handleLinkGet() http.HandlerFunc {
 	}
 }
 
+func (s *server) handleUserLinks() http.HandlerFunc {
+	type userLink struct {
+		ShortURL    string `json:"short_url"`
+		OriginalURL string `json:"original_url"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		links, err := s.store.Link().GetAllByUserID(r.Context().Value(USERID_CONTEXT_KEY).(string))
+		if err != nil {
+			if err == store.ErrRecordNotFound {
+				s.error(w, r, http.StatusNoContent, err)
+				return
+			}
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		userLinks := []userLink{}
+		for _, current := range links {
+			userLinks = append(userLinks, userLink{
+				ShortURL:    s.baseURL + "/" + current.Code,
+				OriginalURL: current.Link,
+			})
+		}
+
+		if err := json.NewEncoder(w).Encode(userLinks); err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		s.respond(w, r, http.StatusOK, "")
+	}
+}
+
 func (s *server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := r.Cookie(USERID_COOKIE_KEY)
+		cookie, err := r.Cookie(USERID_COOKIE_KEY)
 
 		var newUserId string
 		if err == http.ErrNoCookie {
 			newUserId, err = util.GenerateCode()
 			if err != nil {
 				s.error(w, r, http.StatusInternalServerError, err)
+				return
 			}
 
 			cookie := &http.Cookie{
@@ -171,8 +203,43 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 				Value: newUserId,
 			}
 			http.SetCookie(w, cookie)
+		} else {
+			newUserId = cookie.Value
 		}
 
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), USERID_CONTEXT_KEY, newUserId)))
+	})
+}
+
+func (s *server) gzipMiddleware(next http.Handler) http.Handler {
+	type gzipWriter struct {
+		http.ResponseWriter
+		Writer io.Writer
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+			result, err := gzip.NewReader(r.Body)
+			if err != nil {
+				s.error(w, r, http.StatusInternalServerError, err)
+				return
+			}
+			r.Body = result
+		}
+
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+			if err != nil {
+				s.error(w, r, http.StatusInternalServerError, err)
+				return
+			}
+			defer gz.Close()
+
+			w.Header().Set("Content-Encoding", "gzip")
+			next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }

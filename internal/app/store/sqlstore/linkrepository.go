@@ -44,17 +44,17 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 }
 
 func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
-	links := make([]*model.Link, 100)
+	links := []*model.Link{}
 
 	rows, err := r.store.db.Query(
-		"SELECT id, link, code, userid FROM links WHERE userid = $1 LIMIT 100",
+		"SELECT id, link, code, userid FROM links WHERE userid = $1",
 		id,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := 0; rows.Next(); i++ {
+	for rows.Next() {
 		l := &model.Link{}
 		err := rows.Scan(
 			&l.ID,
@@ -65,15 +65,14 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		links[i] = l
+		links = append(links, l)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	if links[0] == nil {
+	if len(links) == 0 {
 		return nil, store.ErrRecordNotFound
 	}
 
