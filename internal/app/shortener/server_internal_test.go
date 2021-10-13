@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const TEST_BASE_URL = "http://localhost:8080"
+const testBaseURL = "http://localhost:8080"
 
 func TestServer_HandleLinkCreateJSON(t *testing.T) {
-	s := newServer(teststore.New(), TEST_BASE_URL)
+	s := newServer(teststore.New(), testBaseURL)
 	testCases := []struct {
 		name         string
 		payload      interface{}

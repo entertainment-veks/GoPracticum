@@ -115,11 +115,6 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 			return
 		}
 
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
 		l := &model.Link{
 			Link:   req.Link,
 			Code:   code,
@@ -201,9 +196,9 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(userIDCookieKey)
 
-		var newUserId string
+		var newUserID string
 		if err == http.ErrNoCookie {
-			newUserId, err = util.GenerateCode()
+			newUserID, err = util.GenerateCode()
 			if err != nil {
 				s.error(w, r, http.StatusInternalServerError, err)
 				return
@@ -211,14 +206,14 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 
 			cookie := &http.Cookie{
 				Name:  userIDCookieKey,
-				Value: newUserId,
+				Value: newUserID,
 			}
 			http.SetCookie(w, cookie)
 		} else {
-			newUserId = cookie.Value
+			newUserID = cookie.Value
 		}
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userIDContextKey, newUserId)))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userIDContextKey, newUserID)))
 	})
 }
 

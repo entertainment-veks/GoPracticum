@@ -7,13 +7,15 @@ import (
 	"testing"
 )
 
-const DRIVER_NAME = "postgres"
-const TESTING_DATABASE_URL = "host=localhost dbname=shortener_db sslmode=disable user=postgres password=postgres"
+const (
+	driverName         = "postgres"
+	testingDatabaseURL = "host=localhost dbname=shortener_db sslmode=disable user=postgres password=postgres"
+)
 
 func TestDB(t *testing.T) (*sql.DB, func(...string)) {
 	t.Helper()
 
-	db, err := sql.Open(DRIVER_NAME, TESTING_DATABASE_URL)
+	db, err := sql.Open(driverName, testingDatabaseURL)
 	if err != nil {
 		t.Fatal(err)
 	}

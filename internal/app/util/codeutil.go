@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 )
 
-const CODE_LENGTH int = 5
+const codeLength int = 5
 
 func GenerateCode() (string, error) {
-	b := make([]byte, CODE_LENGTH)
+	b := make([]byte, codeLength)
 	_, err := rand.Read(b)
 	if err != nil {
 		return "", err
