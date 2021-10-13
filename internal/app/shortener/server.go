@@ -52,7 +52,7 @@ func (s *server) configureRouter() {
 	s.router.Handle("/user/urls", s.handleUserLinks()).Methods(http.MethodGet)
 
 	s.router.Use(s.authMiddleware)
-	//s.router.Use(s.gzipMiddleware)
+	s.router.Use(s.gzipMiddleware)
 }
 
 func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err error) {
@@ -229,7 +229,7 @@ func (s *server) gzipMiddleware(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+		if strings.Contains(r.Header.Get("Content-Encoding"), "application/gzip") {
 			result, err := gzip.NewReader(r.Body)
 			if err != nil {
 				s.error(w, r, http.StatusInternalServerError, err)
@@ -238,7 +238,7 @@ func (s *server) gzipMiddleware(next http.Handler) http.Handler {
 			r.Body = result
 		}
 
-		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "application/gzip") {
 			gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 			if err != nil {
 				s.error(w, r, http.StatusInternalServerError, err)
@@ -246,7 +246,7 @@ func (s *server) gzipMiddleware(next http.Handler) http.Handler {
 			}
 			defer gz.Close()
 
-			w.Header().Set("Content-Encoding", "gzip")
+			w.Header().Set("Content-Encoding", "application/gzip")
 			next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 			return
 		}
