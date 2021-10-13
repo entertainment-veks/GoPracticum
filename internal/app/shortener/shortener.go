@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const DRIVER_NAME = "postgres"
+const driverName = "postgres"
 
 func Start(config *Config) error {
 	db, err := newDB(config.DatabaseURL)
@@ -22,7 +22,7 @@ func Start(config *Config) error {
 }
 
 func newDB(databaseURL string) (*sql.DB, error) {
-	db, err := sql.Open(DRIVER_NAME, databaseURL)
+	db, err := sql.Open(driverName, databaseURL)
 	if err != nil {
 		return nil, err
 	}

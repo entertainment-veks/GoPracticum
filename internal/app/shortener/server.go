@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	USERID_COOKIE_KEY         = "userid"
-	USERID_CONTEXT_KEY ctxKey = iota
+	userIDCookieKey         = "userid"
+	userIDContextKey ctxKey = iota
 )
 
 type ctxKey int8
@@ -48,6 +48,7 @@ func (s *server) configureRouter() {
 	s.router.Handle("/", s.handleLinkCreate()).Methods(http.MethodPost)
 	s.router.Handle("/api/shorten", s.handleLinkCreateJSON()).Methods(http.MethodPost)
 	s.router.Handle("/{key}", s.handleLinkGet()).Methods(http.MethodGet)
+	s.router.Handle("/ping", s.handlePing()).Methods(http.MethodGet)
 	s.router.Handle("/user/urls", s.handleUserLinks()).Methods(http.MethodGet)
 
 	s.router.Use(s.authMiddleware)
@@ -82,7 +83,7 @@ func (s *server) handleLinkCreate() http.HandlerFunc {
 		if err := s.store.Link().Create(&model.Link{
 			Link:   string(body),
 			Code:   code,
-			UserID: r.Context().Value(USERID_CONTEXT_KEY).(string),
+			UserID: r.Context().Value(userIDContextKey).(string),
 		}); err != nil {
 			s.error(w, r, http.StatusInternalServerError, err)
 			return
@@ -122,7 +123,7 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 		l := &model.Link{
 			Link:   req.Link,
 			Code:   code,
-			UserID: r.Context().Value(USERID_CONTEXT_KEY).(string),
+			UserID: r.Context().Value(userIDContextKey).(string),
 		}
 		if err := s.store.Link().Create(l); err != nil {
 			s.error(w, r, http.StatusUnprocessableEntity, err)
@@ -154,13 +155,23 @@ func (s *server) handleLinkGet() http.HandlerFunc {
 	}
 }
 
+func (s *server) handlePing() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.store != nil {
+			s.respond(w, r, http.StatusOK, "")
+		} else {
+			s.respond(w, r, http.StatusInternalServerError, "")
+		}
+	}
+}
+
 func (s *server) handleUserLinks() http.HandlerFunc {
 	type userLink struct {
 		ShortURL    string `json:"short_url"`
 		OriginalURL string `json:"original_url"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		links, err := s.store.Link().GetAllByUserID(r.Context().Value(USERID_CONTEXT_KEY).(string))
+		links, err := s.store.Link().GetAllByUserID(r.Context().Value(userIDContextKey).(string))
 		if err != nil {
 			if err == store.ErrRecordNotFound {
 				s.error(w, r, http.StatusNoContent, err)
@@ -188,7 +199,7 @@ func (s *server) handleUserLinks() http.HandlerFunc {
 
 func (s *server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie(USERID_COOKIE_KEY)
+		cookie, err := r.Cookie(userIDCookieKey)
 
 		var newUserId string
 		if err == http.ErrNoCookie {
@@ -199,7 +210,7 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 			}
 
 			cookie := &http.Cookie{
-				Name:  USERID_COOKIE_KEY,
+				Name:  userIDCookieKey,
 				Value: newUserId,
 			}
 			http.SetCookie(w, cookie)
@@ -207,7 +218,7 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 			newUserId = cookie.Value
 		}
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), USERID_CONTEXT_KEY, newUserId)))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userIDContextKey, newUserId)))
 	})
 }
 

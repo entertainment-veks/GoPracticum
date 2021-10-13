@@ -5,10 +5,12 @@ import (
 	"os"
 )
 
-const SERVER_ADDRESS_KEY = "SERVER_ADDRESS"
-const BASE_URL_KEY = "BASE_URL_KEY"
-const FILE_STORAGE_PATH_KEY = "FILE_STORAGE_PATH"
-const DATABASE_DSN_KEY = "DATABASE_DSN"
+const (
+	serverAddressKey   = "SERVER_ADDRESS"
+	baseURLKey         = "BASE_URL_KEY"
+	fileStoragePathKey = "FILE_STORAGE_PATH"
+	databaseDSNKey     = "DATABASE_DSN"
+)
 
 type Config struct {
 	ServerAddress   string
@@ -27,20 +29,20 @@ func NewConfig() *Config {
 }
 
 func (c *Config) ConfigureViaEnv() {
-	if len(os.Getenv(SERVER_ADDRESS_KEY)) != 0 {
-		c.ServerAddress = os.Getenv(SERVER_ADDRESS_KEY)
+	if len(os.Getenv(serverAddressKey)) != 0 {
+		c.ServerAddress = os.Getenv(serverAddressKey)
 	}
 
-	if len(os.Getenv(BASE_URL_KEY)) != 0 {
-		c.BaseURL = os.Getenv(BASE_URL_KEY)
+	if len(os.Getenv(baseURLKey)) != 0 {
+		c.BaseURL = os.Getenv(baseURLKey)
 	}
 
-	if len(os.Getenv(FILE_STORAGE_PATH_KEY)) != 0 {
-		c.FileStoragePath = os.Getenv(FILE_STORAGE_PATH_KEY)
+	if len(os.Getenv(fileStoragePathKey)) != 0 {
+		c.FileStoragePath = os.Getenv(fileStoragePathKey)
 	}
 
-	if len(os.Getenv(DATABASE_DSN_KEY)) != 0 {
-		c.DatabaseURL = os.Getenv(DATABASE_DSN_KEY)
+	if len(os.Getenv(databaseDSNKey)) != 0 {
+		c.DatabaseURL = os.Getenv(databaseDSNKey)
 	}
 }
 
