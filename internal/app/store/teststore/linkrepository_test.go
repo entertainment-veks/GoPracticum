@@ -16,6 +16,22 @@ func TestLinkRepository_Create(t *testing.T) {
 	assert.NotNil(t, l)
 }
 
+func TestLinkRepository_CreateAll(t *testing.T) {
+	s := teststore.New()
+
+	l1 := model.TestLink()
+	l2 := model.TestLink()
+	l3 := model.TestLink()
+
+	l2.Code = "ABC"
+	l3.Code = "123"
+
+	ls := []*model.Link{l1, l2, l3}
+
+	assert.NoError(t, s.Link().CreateAll(ls))
+	assert.NotNil(t, ls)
+}
+
 func TestLinkRepository_GetByCode(t *testing.T) {
 	s := teststore.New()
 	code := "example"

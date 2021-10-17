@@ -23,6 +23,23 @@ func (r *LinkRepository) Create(l *model.Link) error {
 	).Scan(&l.ID)
 }
 
+func (r LinkRepository) CreateAll(ls []*model.Link) error {
+	var err error
+	for _, l := range ls {
+		if err = l.Validate(); err != nil {
+			return err
+		}
+
+		err = r.store.db.QueryRow(
+			"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) RETURNING id",
+			l.Link,
+			l.Code,
+			l.UserID,
+		).Scan(&l.ID)
+	}
+	return err
+}
+
 func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 	l := &model.Link{}
 	if err := r.store.db.QueryRow(

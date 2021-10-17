@@ -50,6 +50,7 @@ func (s *server) configureRouter() {
 	s.router.Handle("/{key}", s.handleLinkGet()).Methods(http.MethodGet)
 	s.router.Handle("/ping", s.handlePing()).Methods(http.MethodGet)
 	s.router.Handle("/user/urls", s.handleUserLinks()).Methods(http.MethodGet)
+	s.router.Handle("/api/shorten/batch", s.handleLinkCreateAll()).Methods(http.MethodPost)
 
 	s.router.Use(s.authMiddleware)
 	s.router.Use(s.gzipMiddleware)
@@ -134,6 +135,21 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 			return
 		}
 		s.respond(w, r, http.StatusCreated, "")
+	}
+}
+
+func (s *server) handleLinkCreateAll() http.HandlerFunc {
+	type requestElem struct {
+		CorrelationID string `json:"correlation_id"`
+		Link          string `json:"original_url"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &[]requestElem{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
 	}
 }
 

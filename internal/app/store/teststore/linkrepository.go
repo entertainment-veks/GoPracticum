@@ -21,6 +21,18 @@ func (r *LinkRepository) Create(l *model.Link) error {
 	return nil
 }
 
+func (r *LinkRepository) CreateAll(ls []*model.Link) error {
+	for _, l := range ls {
+		if err := l.Validate(); err != nil {
+			return err
+		}
+
+		r.links[l.Code] = l
+		l.ID = len(r.links)
+	}
+	return nil
+}
+
 func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 	l, ok := r.links[c]
 	if !ok {
