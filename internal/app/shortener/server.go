@@ -144,17 +144,53 @@ func (s *server) handleLinkCreateAll() http.HandlerFunc {
 		Link          string `json:"original_url"`
 	}
 
+	type responseElem struct {
+		CorrelationID string `json:"correlation_id"`
+		Link          string `json:"short_url"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &[]requestElem{}
+		req := &[]*requestElem{}
+		resp := &[]*responseElem{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+
+		var ls []*model.Link
+
+		for _, current := range *req {
+			ls = append(ls, &model.Link{
+				Link:   current.Link,
+				Code:   current.CorrelationID,
+				UserID: r.Context().Value(userIDContextKey).(string),
+			})
+
+			*resp = append(*resp, &responseElem{
+				CorrelationID: current.CorrelationID,
+				Link:          s.baseURL + "/" + current.CorrelationID,
+			})
+		}
+
+		if err := s.store.Link().CreateAll(ls); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		w.Header().Add("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		s.respond(w, r, http.StatusCreated, "")
 	}
 }
 
 func (s *server) handleLinkGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		tempo := mux.Vars(r)["key"]
+		tempo = tempo
+
 		l, err := s.store.Link().GetByCode(mux.Vars(r)["key"])
 		if err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
