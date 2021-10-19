@@ -15,12 +15,19 @@ func (r *LinkRepository) Create(l *model.Link) error {
 		return err
 	}
 
-	return r.store.db.QueryRow(
-		"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) RETURNING id",
+	err := r.store.db.QueryRow(
+		"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id",
 		l.Link,
 		l.Code,
 		l.UserID,
 	).Scan(&l.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return store.ErrConflict
+		}
+		return err
+	}
+	return nil
 }
 
 func (r LinkRepository) CreateAll(ls []*model.Link) error {
@@ -31,7 +38,7 @@ func (r LinkRepository) CreateAll(ls []*model.Link) error {
 		}
 
 		err = r.store.db.QueryRow(
-			"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) RETURNING id",
+			"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id",
 			l.Link,
 			l.Code,
 			l.UserID,

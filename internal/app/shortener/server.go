@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"go_practicum/internal/app/model"
 	"go_practicum/internal/app/store"
 	"go_practicum/internal/app/util"
@@ -86,7 +87,11 @@ func (s *server) handleLinkCreate() http.HandlerFunc {
 			Code:   code,
 			UserID: r.Context().Value(userIDContextKey).(string),
 		}); err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
+			if errors.Is(err, store.ErrConflict) {
+				s.error(w, r, http.StatusConflict, err)
+			} else {
+				s.error(w, r, http.StatusUnprocessableEntity, err)
+			}
 			return
 		}
 
@@ -122,7 +127,11 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 			UserID: r.Context().Value(userIDContextKey).(string),
 		}
 		if err := s.store.Link().Create(l); err != nil {
-			s.error(w, r, http.StatusUnprocessableEntity, err)
+			if errors.Is(err, store.ErrConflict) {
+				s.error(w, r, http.StatusConflict, err)
+			} else {
+				s.error(w, r, http.StatusUnprocessableEntity, err)
+			}
 			return
 		}
 
@@ -188,9 +197,6 @@ func (s *server) handleLinkCreateAll() http.HandlerFunc {
 
 func (s *server) handleLinkGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tempo := mux.Vars(r)["key"]
-		tempo = tempo
-
 		l, err := s.store.Link().GetByCode(mux.Vars(r)["key"])
 		if err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
