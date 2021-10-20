@@ -11,10 +11,6 @@ type LinkRepository struct {
 }
 
 func (r *LinkRepository) Create(l *model.Link) error {
-	if err := l.Validate(); err != nil {
-		return err
-	}
-
 	err := r.store.db.QueryRow(
 		"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id",
 		l.Link,
@@ -33,10 +29,6 @@ func (r *LinkRepository) Create(l *model.Link) error {
 func (r LinkRepository) CreateAll(ls []*model.Link) error {
 	var err error
 	for _, l := range ls {
-		if err = l.Validate(); err != nil {
-			return err
-		}
-
 		err = r.store.db.QueryRow(
 			"INSERT INTO links (link, code, userid) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id",
 			l.Link,

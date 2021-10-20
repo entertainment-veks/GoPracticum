@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/google/uuid"
 )
 
 const (
@@ -57,45 +57,65 @@ func (s *server) configureRouter() {
 	s.router.Use(s.gzipMiddleware)
 }
 
-func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err error) {
-	s.respond(w, r, code, err.Error())
+func (s *server) error(w http.ResponseWriter, code int, err error) {
+	s.respond(w, code, err.Error())
 }
 
-func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data string) {
+func (s *server) respond(w http.ResponseWriter, code int, data string) {
 	w.WriteHeader(code)
 	if len(data) != 0 {
 		w.Write([]byte(data))
 	}
 }
 
+
+func (s *server) respondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
+	if err := json.NewEncoder(w).Encode(body); err != nil {
+		s.error(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.Header().Add("Content-Type", "application/json")
+	s.respond(w, statusCode, "")
+}
+
 func (s *server) handleLinkCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
+			s.error(w, http.StatusBadRequest, err)
 			return
 		}
 
 		code, err := util.GenerateCode()
 		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
+			s.error(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		if err := s.store.Link().Create(&model.Link{
+		userID, ok := r.Context().Value(userIDContextKey).(string)
+		if !ok {
+			s.error(w, http.StatusInternalServerError, errors.New("user id is not provided"))
+		}
+
+		l := &model.Link{
 			Link:   string(body),
 			Code:   code,
-			UserID: r.Context().Value(userIDContextKey).(string),
-		}); err != nil {
+			UserID: userID,
+		}
+		if err := l.Validate(); err != nil {
+			s.error(w, http.StatusUnprocessableEntity, err)
+			return
+		}
+		if err := s.store.Link().Create(l); err != nil {
 			if errors.Is(err, store.ErrConflict) {
-				s.error(w, r, http.StatusConflict, err)
-			} else {
-				s.error(w, r, http.StatusUnprocessableEntity, err)
+				s.error(w, http.StatusConflict, err)
+				return
 			}
+			s.error(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		s.respond(w, r, http.StatusCreated, s.baseURL+"/"+code)
+		s.respond(w, http.StatusCreated, s.baseURL+"/"+code)
 	}
 }
 
@@ -111,39 +131,43 @@ func (s *server) handleLinkCreateJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &request{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
+			s.error(w, http.StatusBadRequest, err)
 			return
 		}
 
 		code, err := util.GenerateCode()
 		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
+			s.error(w, http.StatusInternalServerError, err)
 			return
+		}
+
+		userID, ok := r.Context().Value(userIDContextKey).(string)
+		if !ok {
+			s.error(w, http.StatusInternalServerError, errors.New("user id is not provided"))
 		}
 
 		l := &model.Link{
 			Link:   req.Link,
 			Code:   code,
-			UserID: r.Context().Value(userIDContextKey).(string),
+			UserID: userID,
+		}
+		if err := l.Validate(); err != nil {
+			s.error(w, http.StatusUnprocessableEntity, err)
+			return
 		}
 		if err := s.store.Link().Create(l); err != nil {
 			if errors.Is(err, store.ErrConflict) {
-				s.error(w, r, http.StatusConflict, err)
-			} else {
-				s.error(w, r, http.StatusUnprocessableEntity, err)
+				s.error(w, http.StatusConflict, err)
+				return
 			}
+			s.error(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		rawResult := &response{
 			s.baseURL + "/" + code,
 		}
-		w.Header().Add("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(rawResult); err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-		s.respond(w, r, http.StatusCreated, "")
+		s.respondJSON(w, http.StatusCreated, rawResult)
 	}
 }
 
@@ -159,61 +183,68 @@ func (s *server) handleLinkCreateAll() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &[]*requestElem{}
-		resp := &[]*responseElem{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
+		req := []*requestElem{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, http.StatusBadRequest, err)
 			return
+		}
+
+		userID, ok := r.Context().Value(userIDContextKey).(string)
+		if !ok {
+			s.error(w, http.StatusInternalServerError, errors.New("user id is not provided"))
 		}
 
 		var ls []*model.Link
-
-		for _, current := range *req {
-			ls = append(ls, &model.Link{
+		for _, current := range req {
+			l := &model.Link{
 				Link:   current.Link,
 				Code:   current.CorrelationID,
-				UserID: r.Context().Value(userIDContextKey).(string),
-			})
-
-			*resp = append(*resp, &responseElem{
-				CorrelationID: current.CorrelationID,
-				Link:          s.baseURL + "/" + current.CorrelationID,
-			})
+				UserID: userID,
+			}
+			if err := l.Validate(); err != nil {
+				s.error(w, http.StatusUnprocessableEntity, err)
+				return
+			}
+			ls = append(ls, l)
 		}
 
 		if err := s.store.Link().CreateAll(ls); err != nil {
-			s.error(w, r, http.StatusUnprocessableEntity, err)
+			s.error(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		w.Header().Add("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
+		resp := []*responseElem{}
+		for _, current := range ls {
+			resp = append(resp, &responseElem{
+				CorrelationID: current.Code,
+				Link:          s.baseURL + "/" + current.Code,
+			})
 		}
-		s.respond(w, r, http.StatusCreated, "")
+
+		s.respondJSON(w, http.StatusCreated, resp)
 	}
 }
 
 func (s *server) handleLinkGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		l, err := s.store.Link().GetByCode(mux.Vars(r)["key"])
+		code := mux.Vars(r)["key"]
+		l, err := s.store.Link().GetByCode(code)
 		if err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
+			s.error(w, http.StatusBadRequest, err)
 			return
 		}
 
 		w.Header().Set("Location", l.Link)
-		s.respond(w, r, http.StatusTemporaryRedirect, "")
+		s.respond(w, http.StatusTemporaryRedirect, "")
 	}
 }
 
 func (s *server) handlePing() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if s.store != nil {
-			s.respond(w, r, http.StatusOK, "")
+			s.respond(w, http.StatusOK, "")
 		} else {
-			s.respond(w, r, http.StatusInternalServerError, "")
+			s.respond(w, http.StatusInternalServerError, "")
 		}
 	}
 }
@@ -227,10 +258,10 @@ func (s *server) handleUserLinks() http.HandlerFunc {
 		links, err := s.store.Link().GetAllByUserID(r.Context().Value(userIDContextKey).(string))
 		if err != nil {
 			if err == store.ErrRecordNotFound {
-				s.error(w, r, http.StatusNoContent, err)
+				s.error(w, http.StatusNoContent, err)
 				return
 			}
-			s.error(w, r, http.StatusInternalServerError, err)
+			s.error(w, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -242,11 +273,7 @@ func (s *server) handleUserLinks() http.HandlerFunc {
 			})
 		}
 
-		if err := json.NewEncoder(w).Encode(userLinks); err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-		s.respond(w, r, http.StatusOK, "")
+		s.respondJSON(w, http.StatusCreated, userLinks)
 	}
 }
 
@@ -256,9 +283,9 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 
 		var newUserID string
 		if err == http.ErrNoCookie {
-			newUserID, err = util.GenerateCode()
+			newUserID = uuid.New().String()
 			if err != nil {
-				s.error(w, r, http.StatusInternalServerError, err)
+				s.error(w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -271,7 +298,12 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 			newUserID = cookie.Value
 		}
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userIDContextKey, newUserID)))
+		next.ServeHTTP(w, r.WithContext(
+			context.WithValue(r.Context(),
+				userIDContextKey,
+				newUserID,
+			),
+		))
 	})
 }
 
@@ -285,7 +317,7 @@ func (s *server) gzipMiddleware(next http.Handler) http.Handler {
 		if strings.Contains(r.Header.Get("Content-Encoding"), "application/gzip") {
 			result, err := gzip.NewReader(r.Body)
 			if err != nil {
-				s.error(w, r, http.StatusInternalServerError, err)
+				s.error(w, http.StatusInternalServerError, err)
 				return
 			}
 			r.Body = result
@@ -294,7 +326,7 @@ func (s *server) gzipMiddleware(next http.Handler) http.Handler {
 		if strings.Contains(r.Header.Get("Accept-Encoding"), "application/gzip") {
 			gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 			if err != nil {
-				s.error(w, r, http.StatusInternalServerError, err)
+				s.error(w, http.StatusInternalServerError, err)
 				return
 			}
 			defer gz.Close()

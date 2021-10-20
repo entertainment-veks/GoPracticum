@@ -29,20 +29,20 @@ func NewConfig() *Config {
 }
 
 func (c *Config) ConfigureViaEnv() {
-	if len(os.Getenv(serverAddressKey)) != 0 {
-		c.ServerAddress = os.Getenv(serverAddressKey)
+	if val := os.Getenv(serverAddressKey); len(val) != 0 {
+		c.ServerAddress = val
 	}
 
-	if len(os.Getenv(baseURLKey)) != 0 {
-		c.BaseURL = os.Getenv(baseURLKey)
+	if val := os.Getenv(baseURLKey); len(val) != 0 {
+		c.BaseURL = val
 	}
 
-	if len(os.Getenv(fileStoragePathKey)) != 0 {
-		c.FileStoragePath = os.Getenv(fileStoragePathKey)
+	if val := os.Getenv(fileStoragePathKey); len(val) != 0 {
+		c.FileStoragePath = val
 	}
 
-	if len(os.Getenv(databaseDSNKey)) != 0 {
-		c.DatabaseURL = os.Getenv(databaseDSNKey)
+	if val := os.Getenv(databaseDSNKey); len(val) != 0 {
+		c.DatabaseURL = val
 	}
 }
 

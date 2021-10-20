@@ -11,10 +11,6 @@ type LinkRepository struct {
 }
 
 func (r *LinkRepository) Create(l *model.Link) error {
-	if err := l.Validate(); err != nil {
-		return err
-	}
-
 	r.links[l.Code] = l
 	l.ID = len(r.links)
 
@@ -23,10 +19,6 @@ func (r *LinkRepository) Create(l *model.Link) error {
 
 func (r *LinkRepository) CreateAll(ls []*model.Link) error {
 	for _, l := range ls {
-		if err := l.Validate(); err != nil {
-			return err
-		}
-
 		r.links[l.Code] = l
 		l.ID = len(r.links)
 	}
