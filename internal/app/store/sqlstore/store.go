@@ -16,7 +16,7 @@ func New(db *sql.DB) *Store {
 	s := &Store{
 		db: db,
 	}
-
+  
 	return s
 }
 
