@@ -14,10 +14,11 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 const (
-	userIDCookieKey         = "userid"
+	userIDCookieKey         = "shortener-userid"
 	userIDContextKey ctxKey = iota
 )
 
@@ -67,7 +68,6 @@ func (s *server) respond(w http.ResponseWriter, code int, data string) {
 		w.Write([]byte(data))
 	}
 }
-
 
 func (s *server) respondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	if err := json.NewEncoder(w).Encode(body); err != nil {
