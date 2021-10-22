@@ -2,7 +2,6 @@ package sqlstore
 
 import (
 	"database/sql"
-	"go_practicum/internal/app/migration"
 	"go_practicum/internal/app/store"
 
 	_ "github.com/lib/pq"
@@ -18,8 +17,6 @@ func New(db *sql.DB) *Store {
 		db: db,
 	}
 
-	//creating table 'links' if not exist. should move to another method?=
-	migration.CreateLinksTable(db)
 	return s
 }
 

@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	userIDCookieKey         = "userid"
+	userIDCookieKey         = "shortener-userid"
 	userIDContextKey ctxKey = iota
 )
 
