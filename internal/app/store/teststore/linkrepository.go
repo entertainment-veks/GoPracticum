@@ -48,3 +48,10 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 
 	return result, nil
 }
+
+func (r *LinkRepository) DeleteAllByCode(codes []string) error {
+	for _, currentCode := range codes {
+		r.links[currentCode] = nil
+	}
+	return nil
+}

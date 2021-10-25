@@ -7,4 +7,5 @@ type LinkRepository interface {
 	CreateAll([]*model.Link) error
 	GetByCode(c string) (*model.Link, error)
 	GetAllByUserID(id string) ([]*model.Link, error)
+	DeleteAllByCode([]string) error
 }

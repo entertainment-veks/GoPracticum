@@ -41,19 +41,25 @@ func (r LinkRepository) CreateAll(ls []*model.Link) error {
 
 func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 	l := &model.Link{}
+	var isDeleted bool
 	if err := r.store.db.QueryRow(
-		"SELECT id, link, code, userid FROM links WHERE code = $1",
+		"SELECT id, link, code, userid, deleted FROM links WHERE code = $1",
 		c,
 	).Scan(
 		&l.ID,
 		&l.Link,
 		&l.Code,
 		&l.UserID,
+		isDeleted,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
 		}
 		return nil, err
+	}
+
+	if isDeleted {
+		return nil, store.ErrURLDeleted
 	}
 
 	return l, nil
@@ -93,4 +99,19 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 	}
 
 	return links, nil
+}
+
+func (r *LinkRepository) DeleteAllByCode(codes []string) error {
+	_, err := r.store.db.Exec("begin;")
+	if err != nil {
+		return err
+	}
+
+	for _, currentCode := range codes {
+		_, err = r.store.db.Exec(
+			"UPDATE links SET deleted = true WHERE code = $1",
+			currentCode,
+		)
+	}
+	return err
 }
