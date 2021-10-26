@@ -233,6 +233,7 @@ func (s *server) handleLinkGet() http.HandlerFunc {
 		if err != nil {
 			if err == store.ErrURLDeleted {
 				s.respond(w, http.StatusGone, "Gone")
+				return
 			}
 			s.error(w, http.StatusBadRequest, err)
 			return
@@ -311,15 +312,15 @@ func (s *server) authMiddleware(next http.Handler) http.Handler {
 			if err == http.ErrNoCookie {
 				newUserID = uuid.New().String()
 
-				cookie := &http.Cookie{
+				cookie = &http.Cookie{
 					Name:  userIDCookieKey,
 					Value: newUserID,
 				}
 				http.SetCookie(w, cookie)
+			} else {
+				s.error(w, http.StatusInternalServerError, err)
 				return
 			}
-			s.error(w, http.StatusInternalServerError, err)
-			return
 		}
 
 		newUserID = cookie.Value
