@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"go_practicum/internal/app/model"
 	"go_practicum/internal/app/store"
+	"time"
 )
 
 type LinkRepository struct {
@@ -41,16 +42,16 @@ func (r LinkRepository) CreateAll(ls []*model.Link) error {
 
 func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 	l := &model.Link{}
-	var isDeleted *bool
+	var deleted_at *time.Time
 	if err := r.store.db.QueryRow(
-		"SELECT id, link, code, userid, deleted FROM links WHERE code = $1",
+		"SELECT id, link, code, userid, deleted_at FROM links WHERE code = $1",
 		c,
 	).Scan(
 		&l.ID,
 		&l.Link,
 		&l.Code,
 		&l.UserID,
-		&isDeleted,
+		&deleted_at,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
@@ -58,7 +59,7 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 		return nil, err
 	}
 
-	if *isDeleted {
+	if deleted_at != nil {
 		return nil, store.ErrURLDeleted
 	}
 
@@ -102,14 +103,14 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 }
 
 func (r *LinkRepository) DeleteAllByCode(codes []string) error {
-	_, err := r.store.db.Exec("begin;")
+	tx, err := r.store.db.Begin()
 	if err != nil {
 		return err
 	}
 
 	for _, currentCode := range codes {
-		_, err = r.store.db.Exec(
-			"UPDATE links SET deleted = true WHERE code = $1",
+		_, err = tx.Exec(
+			"UPDATE links SET deleted_at = NOW() WHERE code = $1",
 			currentCode,
 		)
 	}
@@ -117,7 +118,7 @@ func (r *LinkRepository) DeleteAllByCode(codes []string) error {
 		return err
 	}
 
-	_, err = r.store.db.Exec("end;")
+	err = tx.Commit()
 
 	return err
 }

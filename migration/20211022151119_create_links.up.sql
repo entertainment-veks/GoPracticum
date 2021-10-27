@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS links (
     link text NOT NULL UNIQUE, 
     code text NOT NULL, 
     userid text NOT NULL,
-    deleted boolean NOT NULL SET DEFAULT false
+    deleted_at timestamp DEFAULT NULL
 );

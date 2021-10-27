@@ -289,13 +289,10 @@ func (s *server) handleLinkDelete() http.HandlerFunc {
 			s.error(w, http.StatusBadRequest, err)
 			return
 		}
-		body := string(bytedBody)
-		body = strings.ReplaceAll(body, "[", "")
-		body = strings.ReplaceAll(body, "]", "")
-		body = strings.ReplaceAll(body, " ", "")
-		body = strings.ReplaceAll(body, `"`, "")
 
-		req := strings.Split((body), ",")
+		replacer := strings.NewReplacer("[", "", "]", "", " ", "", `"`, "")
+		body := replacer.Replace(string(bytedBody))
+		req := strings.Split(body, ",")
 
 		go s.store.Link().DeleteAllByCode(req)
 
