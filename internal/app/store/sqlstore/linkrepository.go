@@ -42,7 +42,7 @@ func (r LinkRepository) CreateAll(ls []*model.Link) error {
 
 func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 	l := &model.Link{}
-	var deleted_at *time.Time
+	var deletedAt *time.Time
 	if err := r.store.db.QueryRow(
 		"SELECT id, link, code, userid, deleted_at FROM links WHERE code = $1",
 		c,
@@ -51,7 +51,7 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 		&l.Link,
 		&l.Code,
 		&l.UserID,
-		&deleted_at,
+		&deletedAt,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
@@ -59,7 +59,7 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 		return nil, err
 	}
 
-	if deleted_at != nil {
+	if deletedAt != nil {
 		return nil, store.ErrURLDeleted
 	}
 
