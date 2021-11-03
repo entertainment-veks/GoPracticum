@@ -5,6 +5,8 @@ import (
 	"go_practicum/internal/app/model"
 	"go_practicum/internal/app/store"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type LinkRepository struct {
@@ -103,22 +105,9 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 }
 
 func (r *LinkRepository) DeleteAllByCode(codes []string) error {
-	tx, err := r.store.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	for _, currentCode := range codes {
-		_, err = tx.Exec(
-			"UPDATE links SET deleted_at = NOW() WHERE code = $1",
-			currentCode,
-		)
-	}
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit()
-
+	_, err := r.store.db.Exec(
+		"UPDATE links SET deleted_at = NOW() WHERE code in $1",
+		pq.Array(codes),
+	)
 	return err
 }

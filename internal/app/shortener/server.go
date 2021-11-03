@@ -290,7 +290,12 @@ func (s *server) handleLinkDelete() http.HandlerFunc {
 			return
 		}
 
-		replacer := strings.NewReplacer("[", "", "]", "", " ", "", `"`, "")
+		replacer := strings.NewReplacer(
+			"[", "",
+			"]", "",
+			" ", "",
+			`"`, "",
+		)
 		body := replacer.Replace(string(bytedBody))
 		req := strings.Split(body, ",")
 
