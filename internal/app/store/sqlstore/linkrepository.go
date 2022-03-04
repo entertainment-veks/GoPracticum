@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"go_practicum/internal/app/model"
 	"go_practicum/internal/app/store"
+	"time"
+
+	"github.com/lib/pq"
 )
 
 type LinkRepository struct {
@@ -41,19 +44,25 @@ func (r LinkRepository) CreateAll(ls []*model.Link) error {
 
 func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 	l := &model.Link{}
+	var deletedAt *time.Time
 	if err := r.store.db.QueryRow(
-		"SELECT id, link, code, userid FROM links WHERE code = $1",
+		"SELECT id, link, code, userid, deleted_at FROM links WHERE code = $1",
 		c,
 	).Scan(
 		&l.ID,
 		&l.Link,
 		&l.Code,
 		&l.UserID,
+		&deletedAt,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
 		}
 		return nil, err
+	}
+
+	if deletedAt != nil {
+		return nil, store.ErrURLDeleted
 	}
 
 	return l, nil
@@ -93,4 +102,12 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 	}
 
 	return links, nil
+}
+
+func (r *LinkRepository) DeleteAllByCode(codes []string) error {
+	_, err := r.store.db.Exec(
+		"UPDATE links SET deleted_at = NOW() WHERE code in $1",
+		pq.Array(codes),
+	)
+	return err
 }

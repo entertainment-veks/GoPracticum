@@ -53,6 +53,7 @@ func (s *server) configureRouter() {
 	s.router.Handle("/ping", s.handlePing()).Methods(http.MethodGet)
 	s.router.Handle("/user/urls", s.handleUserLinks()).Methods(http.MethodGet)
 	s.router.Handle("/api/shorten/batch", s.handleLinkCreateAll()).Methods(http.MethodPost)
+	s.router.Handle("/api/user/urls", s.handleLinkDelete()).Methods(http.MethodDelete)
 
 	s.router.Use(s.authMiddleware)
 	s.router.Use(s.gzipMiddleware)
@@ -230,6 +231,10 @@ func (s *server) handleLinkGet() http.HandlerFunc {
 		code := mux.Vars(r)["key"]
 		l, err := s.store.Link().GetByCode(code)
 		if err != nil {
+			if err == store.ErrURLDeleted {
+				s.respond(w, http.StatusGone, "Gone")
+				return
+			}
 			s.error(w, http.StatusBadRequest, err)
 			return
 		}
@@ -277,26 +282,50 @@ func (s *server) handleUserLinks() http.HandlerFunc {
 	}
 }
 
+func (s *server) handleLinkDelete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bytedBody, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			s.error(w, http.StatusBadRequest, err)
+			return
+		}
+
+		replacer := strings.NewReplacer(
+			"[", "",
+			"]", "",
+			" ", "",
+			`"`, "",
+		)
+		body := replacer.Replace(string(bytedBody))
+		req := strings.Split(body, ",")
+
+		go s.store.Link().DeleteAllByCode(req)
+
+		s.respond(w, http.StatusAccepted, "Accepted")
+	}
+}
+
 func (s *server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(userIDCookieKey)
 
 		var newUserID string
-		if err == http.ErrNoCookie {
-			newUserID = uuid.New().String()
-			if err != nil {
+		if err != nil {
+			if err == http.ErrNoCookie {
+				newUserID = uuid.New().String()
+
+				cookie = &http.Cookie{
+					Name:  userIDCookieKey,
+					Value: newUserID,
+				}
+				http.SetCookie(w, cookie)
+			} else {
 				s.error(w, http.StatusInternalServerError, err)
 				return
 			}
-
-			cookie := &http.Cookie{
-				Name:  userIDCookieKey,
-				Value: newUserID,
-			}
-			http.SetCookie(w, cookie)
-		} else {
-			newUserID = cookie.Value
 		}
+
+		newUserID = cookie.Value
 
 		next.ServeHTTP(w, r.WithContext(
 			context.WithValue(r.Context(),
