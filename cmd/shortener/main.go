@@ -1,17 +1,15 @@
 package main
 
 import (
+	"go_practicum/app/config"
+	"go_practicum/app/shortener"
 	"log"
-
-	"go_practicum/internal/app/shortener"
 )
 
 func main() {
-	config := shortener.NewConfig() //getting config with default values
-	config.ConfigureViaEnv()        //overwritting config using values from env
-	config.ConfigureViaFlags()      //overwritting config using values from flags
+	cfg := config.NewConfig()
 
-	if err := shortener.Start(config); err != nil {
+	if err := shortener.Start(*cfg); err != nil {
 		log.Fatal(err)
 	}
 }
