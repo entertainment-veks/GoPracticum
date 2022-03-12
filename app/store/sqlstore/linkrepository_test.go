@@ -29,7 +29,7 @@ func TestLinkRepository_CreateAll(t *testing.T) {
 	l3 := model.TestLink()
 
 	l2.Link = "www.ya.ru"
-	l3.Link = "www.shhhheee.sh"
+	l3.Link = "www.sheep.sh"
 
 	ls := []*model.Link{l1, l2, l3}
 

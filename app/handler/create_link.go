@@ -116,7 +116,7 @@ func HandleLinkCreateAll(s store.Store, cfg config.Config) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := []*requestElem{}
+		var req []*requestElem
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			respondError(w, http.StatusBadRequest, err)
 			return
@@ -146,7 +146,7 @@ func HandleLinkCreateAll(s store.Store, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		resp := []*responseElem{}
+		var resp []*responseElem
 		for _, current := range ls {
 			resp = append(resp, &responseElem{
 				CorrelationID: current.Code,

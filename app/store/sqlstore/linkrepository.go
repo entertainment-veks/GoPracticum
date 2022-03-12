@@ -69,7 +69,7 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 }
 
 func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
-	links := []*model.Link{}
+	var links []*model.Link
 
 	rows, err := r.store.db.Query(
 		"SELECT id, link, code, userid FROM links WHERE userid = $1",

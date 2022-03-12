@@ -9,7 +9,7 @@ import (
 
 func HandleLinkDelete(s store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bytedBody, err := ioutil.ReadAll(r.Body)
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, err)
 			return
@@ -21,8 +21,8 @@ func HandleLinkDelete(s store.Store) http.HandlerFunc {
 			" ", "",
 			`"`, "",
 		)
-		body := replacer.Replace(string(bytedBody))
-		req := strings.Split(body, ",")
+		stringedBody := replacer.Replace(string(body))
+		req := strings.Split(stringedBody, ",")
 
 		go s.Link().DeleteAllByCode(req)
 

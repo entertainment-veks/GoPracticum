@@ -41,7 +41,7 @@ func HandleGetUserLinks(s store.Store, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		userLinks := []userLink{}
+		var userLinks []userLink
 		for _, current := range links {
 			userLinks = append(userLinks, userLink{
 				ShortURL:    cfg.BaseURL + "/" + current.Code,

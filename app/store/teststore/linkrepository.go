@@ -35,7 +35,7 @@ func (r *LinkRepository) GetByCode(c string) (*model.Link, error) {
 }
 
 func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
-	result := []*model.Link{}
+	var result []*model.Link
 	for _, current := range r.links {
 		if current.UserID == id {
 			result = append(result, current)

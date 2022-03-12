@@ -12,6 +12,13 @@ const (
 	databaseDSNKey     = "DATABASE_DSN"
 )
 
+const (
+	defServerAddress   = ":8080"
+	defBaseURL         = "http://127.0.0.1:8080"
+	defFileStoragePath = "file"
+	defDatabaseURL     = "postgres://postgres:postgres@localhost:5432/shortener?sslmode=disable"
+)
+
 type Config struct {
 	ServerAddress   string
 	BaseURL         string
@@ -52,10 +59,10 @@ func init() {
 
 func NewConfig() *Config {
 	c := &Config{
-		ServerAddress:   ":8080",
-		BaseURL:         "http://127.0.0.1:8080",
-		FileStoragePath: "file",
-		DatabaseURL:     "postgres://postgres:postgres@localhost:5432/shortener?sslmode=disable",
+		ServerAddress:   defServerAddress,
+		BaseURL:         defBaseURL,
+		FileStoragePath: defFileStoragePath,
+		DatabaseURL:     defDatabaseURL,
 	}
 
 	c.configureViaEnv()

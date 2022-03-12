@@ -15,7 +15,7 @@ const (
 func respond(w http.ResponseWriter, code int, data string) {
 	w.WriteHeader(code)
 	if len(data) != 0 {
-		w.Write([]byte(data))
+		_, _ = w.Write([]byte(data))
 	}
 }
 
