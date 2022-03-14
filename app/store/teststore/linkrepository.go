@@ -51,7 +51,7 @@ func (r *LinkRepository) GetAllByUserID(id string) ([]*model.Link, error) {
 
 func (r *LinkRepository) DeleteAllByCode(codes []string) error {
 	for _, currentCode := range codes {
-		r.links[currentCode] = nil
+		delete(r.links, currentCode)
 	}
 	return nil
 }

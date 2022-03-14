@@ -24,10 +24,10 @@ func respondError(w http.ResponseWriter, code int, err error) {
 }
 
 func respondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
+	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
-	respond(w, statusCode, "")
 }

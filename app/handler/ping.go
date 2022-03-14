@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// HandlePing for pinging :D
 func HandlePing(s store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if s != nil {

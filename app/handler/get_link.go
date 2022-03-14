@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+// HandleLinkGet uses for getting original link.
+//
+// Link code should be passed as path var {key}
 func HandleLinkGet(s store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := mux.Vars(r)["key"]
@@ -25,6 +28,9 @@ func HandleLinkGet(s store.Store) http.HandlerFunc {
 	}
 }
 
+// HandleGetUserLinks uses for getting all link which was shorted by this user.
+//
+// User ID passes in cookie by AuthMiddleware
 func HandleGetUserLinks(s store.Store, cfg config.Config) http.HandlerFunc {
 	type userLink struct {
 		ShortURL    string `json:"short_url"`
@@ -49,6 +55,6 @@ func HandleGetUserLinks(s store.Store, cfg config.Config) http.HandlerFunc {
 			})
 		}
 
-		respondJSON(w, http.StatusCreated, userLinks)
+		respondJSON(w, http.StatusOK, userLinks)
 	}
 }

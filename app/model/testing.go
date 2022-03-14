@@ -2,7 +2,7 @@ package model
 
 func TestLink() *Link {
 	return &Link{
-		Link:   "www.google.com",
+		Link:   "https://www.google.com",
 		Code:   "CODE",
 		UserID: "userid",
 	}

@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"sync"
 )
 
 const (
@@ -19,6 +20,10 @@ const (
 	defDatabaseURL     = "postgres://postgres:postgres@localhost:5432/shortener?sslmode=disable"
 )
 
+var (
+	configuredByFlags sync.Once
+)
+
 type Config struct {
 	ServerAddress   string
 	BaseURL         string
@@ -32,30 +37,6 @@ var (
 	FileStoragePathFlagsValue string
 	DatabaseURLFlagsValue     string
 )
-
-func init() {
-	flag.Func("a", "Server address", func(s string) error {
-		ServerAddressFlagsValue = s
-		return nil
-	})
-
-	flag.Func("b", "Base url", func(s string) error {
-		BaseURLFlagsValue = s
-		return nil
-	})
-
-	flag.Func("f", "File storage path", func(s string) error {
-		FileStoragePathFlagsValue = s
-		return nil
-	})
-
-	flag.Func("d", "Database path", func(s string) error {
-		DatabaseURLFlagsValue = s
-		return nil
-	})
-
-	flag.Parse()
-}
 
 func NewConfig() *Config {
 	c := &Config{
@@ -90,6 +71,30 @@ func (c *Config) configureViaEnv() {
 }
 
 func (c *Config) configureViaFlags() {
+	configuredByFlags.Do(func() {
+		flag.Func("a", "Server address", func(s string) error {
+			ServerAddressFlagsValue = s
+			return nil
+		})
+
+		flag.Func("b", "Base url", func(s string) error {
+			BaseURLFlagsValue = s
+			return nil
+		})
+
+		flag.Func("f", "File storage path", func(s string) error {
+			FileStoragePathFlagsValue = s
+			return nil
+		})
+
+		flag.Func("d", "Database path", func(s string) error {
+			DatabaseURLFlagsValue = s
+			return nil
+		})
+
+		flag.Parse()
+	})
+
 	if len(ServerAddressFlagsValue) != 0 {
 		c.ServerAddress = ServerAddressFlagsValue
 	}

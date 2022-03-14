@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// GzipMiddleware uses when client supports gzip compress
+//
+// To activate it you need to provide "Content-Encoding" header with "application/gzip" value
 func GzipMiddleware(next http.Handler) http.Handler {
 	type gzipWriter struct {
 		http.ResponseWriter

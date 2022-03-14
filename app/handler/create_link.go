@@ -11,6 +11,10 @@ import (
 	"net/http"
 )
 
+// HandleLinkCreate uses for creating one single link by raw data.
+//
+// Link which needs to be shortened passes as raw body.
+// Returns status 201 and shorted link in response or an error.
 func HandleLinkCreate(s store.Store, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
@@ -28,6 +32,7 @@ func HandleLinkCreate(s store.Store, cfg config.Config) http.HandlerFunc {
 		userID, ok := r.Context().Value(userIDContextKey).(string)
 		if !ok {
 			respondError(w, http.StatusInternalServerError, errors.New("user id is not provided"))
+			return
 		}
 
 		l := &model.Link{
@@ -52,7 +57,12 @@ func HandleLinkCreate(s store.Store, cfg config.Config) http.HandlerFunc {
 	}
 }
 
-func HandleLinkCreateJSON(s store.Store, cfg config.Config) http.HandlerFunc {
+// HandleLinkCreateJson uses for creating one single link by json object.
+//
+// Link which needs to short passes as json object, ex: { "url":"https://google.com" }.
+// Returns status 201 and shorted link in response json object,
+// ex: { "result":"http://127.0.0.1:8080/code1234" } or an error.
+func HandleLinkCreateJson(s store.Store, cfg config.Config) http.HandlerFunc {
 	type request struct {
 		Link string `json:"url"`
 	}
@@ -104,6 +114,31 @@ func HandleLinkCreateJSON(s store.Store, cfg config.Config) http.HandlerFunc {
 	}
 }
 
+// HandleLinkCreateAll uses for creating many links by json array.
+//
+// Links which need to short passes as json array, ex:
+// [
+// 		{
+//	 		"correlation_id":"1",
+//	 		"original_url":"https://google.com"
+//	 	},
+//	 	{
+//	 		"correlation_id":"2",
+//	 		"original_url":"https://ya.ru"
+//		}
+// ].
+//
+// Returns status 201 and shorted link in response json array, ex:
+// [
+// 		{
+//	 		"correlation_id":"1",
+//	 		"short_url":"https://127.0.0.1:8080/code1234"
+//	 	},
+//	 	{
+//	 		"correlation_id":"2",
+//	 		"short_url":"http://127.0.0.1:8080/1234code"
+//		}
+// ].
 func HandleLinkCreateAll(s store.Store, cfg config.Config) http.HandlerFunc {
 	type requestElem struct {
 		CorrelationID string `json:"correlation_id"`

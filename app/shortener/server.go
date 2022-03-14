@@ -32,7 +32,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) configureRouter(store store.Store, cfg config.Config) {
 	s.router.Handle("/", handler.HandleLinkCreate(store, cfg)).Methods(http.MethodPost)
-	s.router.Handle("/api/shorten", handler.HandleLinkCreateJSON(store, cfg)).Methods(http.MethodPost)
+	s.router.Handle("/api/shorten", handler.HandleLinkCreateJson(store, cfg)).Methods(http.MethodPost)
 	s.router.Handle("/{key}", handler.HandleLinkGet(store)).Methods(http.MethodGet)
 	s.router.Handle("/ping", handler.HandlePing(store)).Methods(http.MethodGet)
 	s.router.Handle("/user/urls", handler.HandleGetUserLinks(store, cfg)).Methods(http.MethodGet)

@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+// AuthMiddleware needs for auth users.
+//
+// It puts cookie with user id
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(userIDCookieKey)
