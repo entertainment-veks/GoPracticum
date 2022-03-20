@@ -23,7 +23,7 @@ func TestDB(t *testing.T) (*sql.DB, func(...string)) {
 		t.Fatal(err)
 	}
 
-	if err := db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		t.Fatal(err)
 	}
 
