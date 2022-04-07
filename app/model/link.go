@@ -13,6 +13,7 @@ type Link struct {
 }
 
 func (l *Link) Validate() error {
+	//lint:ignore S1007 errors in regex if change " -to> `
 	regex, err := regexp.Compile("^(http(s)?://)[\\w.-]+(?:\\.[\\w.-]+)+[\\w\\-._~:/?#[\\]@!$&'()*+,;=]+$")
 	if err != nil {
 		return err
