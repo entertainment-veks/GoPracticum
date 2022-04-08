@@ -11,6 +11,7 @@ const (
 	baseURLKey         = "BASE_URL_KEY"
 	fileStoragePathKey = "FILE_STORAGE_PATH"
 	databaseDSNKey     = "DATABASE_DSN"
+	enableHttpsKey     = "ENABLE_HTTPS"
 )
 
 const (
@@ -18,6 +19,7 @@ const (
 	defBaseURL         = "http://127.0.0.1:8080"
 	defFileStoragePath = "file"
 	defDatabaseURL     = "postgres://postgres:postgres@localhost:5432/shortener?sslmode=disable"
+	defEnableHttps     = false
 )
 
 var (
@@ -29,6 +31,7 @@ type Config struct {
 	BaseURL         string
 	FileStoragePath string
 	DatabaseURL     string
+	EnableHTTPS     bool
 }
 
 var (
@@ -36,6 +39,7 @@ var (
 	BaseURLFlagsValue         string
 	FileStoragePathFlagsValue string
 	DatabaseURLFlagsValue     string
+	EnableHTTPSFlagsValue     bool
 )
 
 func NewConfig() *Config {
@@ -44,6 +48,7 @@ func NewConfig() *Config {
 		BaseURL:         defBaseURL,
 		FileStoragePath: defFileStoragePath,
 		DatabaseURL:     defDatabaseURL,
+		EnableHTTPS:     defEnableHttps,
 	}
 
 	c.configureViaEnv()
@@ -67,6 +72,10 @@ func (c *Config) configureViaEnv() {
 
 	if val := os.Getenv(databaseDSNKey); len(val) != 0 {
 		c.DatabaseURL = val
+	}
+
+	if val := os.Getenv(enableHttpsKey); len(val) != 0 {
+		c.EnableHTTPS = true
 	}
 }
 
@@ -92,6 +101,11 @@ func (c *Config) configureViaFlags() {
 			return nil
 		})
 
+		flag.Func("s", "Enable HTTPS", func(s string) error {
+			EnableHTTPSFlagsValue = true
+			return nil
+		})
+
 		flag.Parse()
 	})
 
@@ -106,5 +120,8 @@ func (c *Config) configureViaFlags() {
 	}
 	if len(DatabaseURLFlagsValue) != 0 {
 		c.DatabaseURL = DatabaseURLFlagsValue
+	}
+	if EnableHTTPSFlagsValue {
+		c.EnableHTTPS = EnableHTTPSFlagsValue
 	}
 }

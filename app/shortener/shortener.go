@@ -5,6 +5,7 @@ import (
 	"github.com/golang-migrate/migrate"
 	"go_practicum/app/config"
 	"go_practicum/app/store/sqlstore"
+	"golang.org/x/crypto/acme/autocert"
 	"net/http"
 )
 
@@ -20,7 +21,11 @@ func Start(config config.Config) error {
 	store := sqlstore.New(db)
 	s := newServer(store, config)
 
-	return http.ListenAndServe(config.ServerAddress, s)
+	if config.EnableHTTPS {
+		return http.Serve(autocert.NewListener(config.ServerAddress), s)
+	} else {
+		return http.ListenAndServe(config.ServerAddress, s)
+	}
 }
 
 func newDB(databaseURL string) (*sql.DB, error) {
@@ -29,7 +34,7 @@ func newDB(databaseURL string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	if err = db.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
