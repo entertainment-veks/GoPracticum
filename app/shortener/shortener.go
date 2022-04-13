@@ -1,9 +1,11 @@
 package shortener
 
 import (
+	"context"
 	"database/sql"
 	"github.com/golang-migrate/migrate"
 	"go_practicum/app/config"
+	mos "go_practicum/app/os"
 	"go_practicum/app/store/sqlstore"
 	"golang.org/x/crypto/acme/autocert"
 	"net/http"
@@ -11,7 +13,7 @@ import (
 
 const driverName = "postgres"
 
-func Start(config config.Config) error {
+func Start(ctx context.Context, config config.Config) error {
 	db, err := newDB(config.DatabaseURL)
 	if err != nil {
 		return err
@@ -19,12 +21,19 @@ func Start(config config.Config) error {
 
 	defer db.Close()
 	store := sqlstore.New(db)
-	s := newServer(store, config)
+	r := newRouter(store, config)
+
+	server := &http.Server{
+		Addr:    config.ServerAddress,
+		Handler: r,
+	}
+
+	go mos.ListenShutdownSignals(ctx, server)
 
 	if config.EnableHTTPS {
-		return http.Serve(autocert.NewListener(config.ServerAddress), s)
+		return server.Serve(autocert.NewListener(config.ServerAddress))
 	} else {
-		return http.ListenAndServe(config.ServerAddress, s)
+		return server.ListenAndServe()
 	}
 }
 

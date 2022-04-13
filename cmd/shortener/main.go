@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go_practicum/app/config"
 	"go_practicum/app/shortener"
@@ -17,8 +18,9 @@ func main() {
 	typeGlVars()
 
 	cfg := config.NewConfig()
+	ctx := context.Background()
 
-	if err := shortener.Start(*cfg); err != nil {
+	if err := shortener.Start(ctx, *cfg); err != nil {
 		log.Fatal(err)
 	}
 }

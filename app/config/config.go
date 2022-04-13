@@ -65,7 +65,9 @@ func NewConfig() *Config {
 }
 
 func (c *Config) configureViaJson() {
-	configJsonPath = os.Getenv(serverAddressKey)
+	if len(configJsonPath) == 0 {
+		return
+	}
 
 	data, err := ioutil.ReadFile(configJsonPath)
 	if err != nil {
