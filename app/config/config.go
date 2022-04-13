@@ -1,12 +1,16 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"sync"
 )
 
 const (
+	configJsonPathKay  = "CONFIG_JSON_PATH"
 	serverAddressKey   = "SERVER_ADDRESS"
 	baseURLKey         = "BASE_URL_KEY"
 	fileStoragePathKey = "FILE_STORAGE_PATH"
@@ -24,17 +28,19 @@ const (
 
 var (
 	configuredByFlags sync.Once
+	configJsonPath    string
 )
 
 type Config struct {
-	ServerAddress   string
-	BaseURL         string
-	FileStoragePath string
-	DatabaseURL     string
-	EnableHTTPS     bool
+	ServerAddress   string `json:"server_address"`
+	BaseURL         string `json:"base_url"`
+	FileStoragePath string `json:"file_storage_path"`
+	DatabaseURL     string `json:"database_url"`
+	EnableHTTPS     bool   `json:"enable_https"`
 }
 
 var (
+	configJsonPathFlagsValue  string
 	ServerAddressFlagsValue   string
 	BaseURLFlagsValue         string
 	FileStoragePathFlagsValue string
@@ -53,11 +59,48 @@ func NewConfig() *Config {
 
 	c.configureViaEnv()
 	c.configureViaFlags()
+	c.configureViaJson() //it should be last
 
 	return c
 }
 
+func (c *Config) configureViaJson() {
+	configJsonPath = os.Getenv(serverAddressKey)
+
+	data, err := ioutil.ReadFile(configJsonPath)
+	if err != nil {
+		fmt.Println("Cannot read json config. Ignore if you don't create it", err)
+		return
+	}
+
+	var newCfg Config
+	if err := json.Unmarshal(data, &newCfg); err != nil {
+		fmt.Println("Cannot unmarshal json config. Ignore if you don't create it", err)
+		return
+	}
+
+	if c.ServerAddress == defServerAddress {
+		c.ServerAddress = newCfg.ServerAddress
+	}
+	if c.BaseURL == defBaseURL {
+		c.BaseURL = newCfg.BaseURL
+	}
+	if c.FileStoragePath == defFileStoragePath {
+		c.FileStoragePath = newCfg.FileStoragePath
+	}
+	if c.DatabaseURL == defDatabaseURL {
+		c.DatabaseURL = newCfg.DatabaseURL
+	}
+	if c.EnableHTTPS == defEnableHttps {
+		c.EnableHTTPS = newCfg.EnableHTTPS
+	}
+}
+
 func (c *Config) configureViaEnv() {
+	if val := os.Getenv(configJsonPathKay); len(val) != 0 {
+		configJsonPath = val
+	}
+
 	if val := os.Getenv(serverAddressKey); len(val) != 0 {
 		c.ServerAddress = val
 	}
@@ -81,6 +124,11 @@ func (c *Config) configureViaEnv() {
 
 func (c *Config) configureViaFlags() {
 	configuredByFlags.Do(func() {
+		flag.Func("c", "Config path", func(s string) error {
+			configJsonPathFlagsValue = s
+			return nil
+		})
+
 		flag.Func("a", "Server address", func(s string) error {
 			ServerAddressFlagsValue = s
 			return nil
@@ -109,6 +157,9 @@ func (c *Config) configureViaFlags() {
 		flag.Parse()
 	})
 
+	if len(configJsonPathFlagsValue) != 0 {
+		configJsonPath = configJsonPathFlagsValue
+	}
 	if len(ServerAddressFlagsValue) != 0 {
 		c.ServerAddress = ServerAddressFlagsValue
 	}
