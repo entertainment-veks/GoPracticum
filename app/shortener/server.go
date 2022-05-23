@@ -8,29 +8,29 @@ import (
 	"net/http"
 )
 
-type server struct {
+type router struct {
 	router  *mux.Router
 	store   store.Store
 	baseURL string
 }
 
-func newServer(store store.Store, cfg config.Config) *server {
-	s := &server{
+func newRouter(store store.Store, cfg config.Config) *router {
+	r := &router{
 		router:  mux.NewRouter(),
 		store:   store,
 		baseURL: cfg.BaseURL,
 	}
 
-	s.configureRouter(store, cfg)
+	r.configureRouter(store, cfg)
 
-	return s
+	return r
 }
 
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
-func (s *server) configureRouter(store store.Store, cfg config.Config) {
+func (s *router) configureRouter(store store.Store, cfg config.Config) {
 	s.router.Handle("/", handler.HandleLinkCreate(store, cfg)).Methods(http.MethodPost)
 	s.router.Handle("/api/shorten", handler.HandleLinkCreateJson(store, cfg)).Methods(http.MethodPost)
 	s.router.Handle("/{key}", handler.HandleLinkGet(store)).Methods(http.MethodGet)

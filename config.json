@@ -1,0 +1,7 @@
+{
+  "server_address": ":8080",
+  "base_url": "http://127.0.0.1:8080",
+  "file_storage_path": "file",
+  "database_dsn": "postgres://postgres:postgres@localhost:5432/shortener?sslmode=disable",
+  "enable_https": false
+}

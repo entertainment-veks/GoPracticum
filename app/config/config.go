@@ -1,16 +1,21 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"sync"
 )
 
 const (
+	configJsonPathKay  = "CONFIG_JSON_PATH"
 	serverAddressKey   = "SERVER_ADDRESS"
 	baseURLKey         = "BASE_URL_KEY"
 	fileStoragePathKey = "FILE_STORAGE_PATH"
 	databaseDSNKey     = "DATABASE_DSN"
+	enableHttpsKey     = "ENABLE_HTTPS"
 )
 
 const (
@@ -18,24 +23,29 @@ const (
 	defBaseURL         = "http://127.0.0.1:8080"
 	defFileStoragePath = "file"
 	defDatabaseURL     = "postgres://postgres:postgres@localhost:5432/shortener?sslmode=disable"
+	defEnableHttps     = false
 )
 
 var (
 	configuredByFlags sync.Once
+	configJsonPath    string
 )
 
 type Config struct {
-	ServerAddress   string
-	BaseURL         string
-	FileStoragePath string
-	DatabaseURL     string
+	ServerAddress   string `json:"server_address"`
+	BaseURL         string `json:"base_url"`
+	FileStoragePath string `json:"file_storage_path"`
+	DatabaseURL     string `json:"database_url"`
+	EnableHTTPS     bool   `json:"enable_https"`
 }
 
 var (
+	configJsonPathFlagsValue  string
 	ServerAddressFlagsValue   string
 	BaseURLFlagsValue         string
 	FileStoragePathFlagsValue string
 	DatabaseURLFlagsValue     string
+	EnableHTTPSFlagsValue     bool
 )
 
 func NewConfig() *Config {
@@ -44,15 +54,55 @@ func NewConfig() *Config {
 		BaseURL:         defBaseURL,
 		FileStoragePath: defFileStoragePath,
 		DatabaseURL:     defDatabaseURL,
+		EnableHTTPS:     defEnableHttps,
 	}
 
 	c.configureViaEnv()
 	c.configureViaFlags()
+	c.configureViaJson() //it should be last
 
 	return c
 }
 
+func (c *Config) configureViaJson() {
+	if len(configJsonPath) == 0 {
+		return
+	}
+
+	data, err := ioutil.ReadFile(configJsonPath)
+	if err != nil {
+		fmt.Println("Cannot read json config. Ignore if you don't create it", err)
+		return
+	}
+
+	var newCfg Config
+	if err := json.Unmarshal(data, &newCfg); err != nil {
+		fmt.Println("Cannot unmarshal json config. Ignore if you don't create it", err)
+		return
+	}
+
+	if c.ServerAddress == defServerAddress {
+		c.ServerAddress = newCfg.ServerAddress
+	}
+	if c.BaseURL == defBaseURL {
+		c.BaseURL = newCfg.BaseURL
+	}
+	if c.FileStoragePath == defFileStoragePath {
+		c.FileStoragePath = newCfg.FileStoragePath
+	}
+	if c.DatabaseURL == defDatabaseURL {
+		c.DatabaseURL = newCfg.DatabaseURL
+	}
+	if c.EnableHTTPS == defEnableHttps {
+		c.EnableHTTPS = newCfg.EnableHTTPS
+	}
+}
+
 func (c *Config) configureViaEnv() {
+	if val := os.Getenv(configJsonPathKay); len(val) != 0 {
+		configJsonPath = val
+	}
+
 	if val := os.Getenv(serverAddressKey); len(val) != 0 {
 		c.ServerAddress = val
 	}
@@ -68,10 +118,19 @@ func (c *Config) configureViaEnv() {
 	if val := os.Getenv(databaseDSNKey); len(val) != 0 {
 		c.DatabaseURL = val
 	}
+
+	if val := os.Getenv(enableHttpsKey); len(val) != 0 {
+		c.EnableHTTPS = true
+	}
 }
 
 func (c *Config) configureViaFlags() {
 	configuredByFlags.Do(func() {
+		flag.Func("c", "Config path", func(s string) error {
+			configJsonPathFlagsValue = s
+			return nil
+		})
+
 		flag.Func("a", "Server address", func(s string) error {
 			ServerAddressFlagsValue = s
 			return nil
@@ -92,9 +151,17 @@ func (c *Config) configureViaFlags() {
 			return nil
 		})
 
+		flag.Func("s", "Enable HTTPS", func(s string) error {
+			EnableHTTPSFlagsValue = true
+			return nil
+		})
+
 		flag.Parse()
 	})
 
+	if len(configJsonPathFlagsValue) != 0 {
+		configJsonPath = configJsonPathFlagsValue
+	}
 	if len(ServerAddressFlagsValue) != 0 {
 		c.ServerAddress = ServerAddressFlagsValue
 	}
@@ -106,5 +173,8 @@ func (c *Config) configureViaFlags() {
 	}
 	if len(DatabaseURLFlagsValue) != 0 {
 		c.DatabaseURL = DatabaseURLFlagsValue
+	}
+	if EnableHTTPSFlagsValue {
+		c.EnableHTTPS = EnableHTTPSFlagsValue
 	}
 }
